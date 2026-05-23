@@ -1,5 +1,4 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { type KeyId } from "@earendil-works/pi-tui";
 import { createFfmpegRecorder } from "./audio/ffmpeg-recorder";
 import { loadConfig } from "./config/load-config";
 import { resolveStartupOptions } from "./config/startup";
@@ -55,13 +54,6 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
     notify,
     onModeChange: (mode) => inputIndicator.setMode(mode),
     onError: reportError,
-  });
-
-  pi.registerShortcut(keybind as KeyId, {
-    description: "Toggle voice dictation recording",
-    handler: async (ctx) => {
-      await controller.toggle(ctx).catch((error: unknown) => reportError(ctx, error));
-    },
   });
 
   pi.registerCommand("stt", {
@@ -129,6 +121,9 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
       getMode: () => controller.getMode(),
       renderLabel: (theme) => inputIndicator.renderLabel(theme),
       attachTui: (tui) => inputIndicator.attach(tui),
+      onToggle: (handlerCtx) => {
+        void controller.toggle(handlerCtx).catch((error: unknown) => reportError(handlerCtx, error));
+      },
       onCancel: (handlerCtx) => {
         void controller.cancel(handlerCtx).catch((error: unknown) => reportError(handlerCtx, error));
       },

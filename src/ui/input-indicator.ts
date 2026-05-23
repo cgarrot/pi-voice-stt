@@ -5,6 +5,7 @@ import {
   visibleWidth,
   type EditorComponent,
   type EditorTheme,
+  type KeyId,
   type TUI,
 } from "@earendil-works/pi-tui";
 import type { DictationMode } from "../core/dictation-controller";
@@ -14,6 +15,7 @@ type VoiceEditorOptions = {
   ctx: ExtensionContext;
   getMode(): DictationMode;
   renderLabel(theme: Theme): string;
+  onToggle(ctx: ExtensionContext): void;
   onCancel(ctx: ExtensionContext): void;
   onSend(ctx: ExtensionContext): void;
 };
@@ -71,6 +73,11 @@ class VoiceEditorWrapper implements EditorComponent {
   handleInput(data: string): void {
     this.syncBase();
     const mode = this.options.getMode();
+
+    if (matchesKey(data, this.options.keybind as KeyId)) {
+      this.options.onToggle(this.options.ctx);
+      return;
+    }
 
     if (mode !== "idle" && matchesKey(data, "escape")) {
       this.options.onCancel(this.options.ctx);
