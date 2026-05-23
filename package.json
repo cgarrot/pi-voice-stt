@@ -1,6 +1,6 @@
 {
   "name": "pi-voice-stt",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Provider-agnostic speech-to-text dictation extension for the Pi TUI.",
   "license": "MIT",
   "type": "module",
@@ -33,6 +33,7 @@
   "files": [
     "src",
     "examples",
+    "assets",
     "README.md",
     "LICENSE",
     "SECURITY.md"
@@ -40,7 +41,8 @@
   "pi": {
     "extensions": [
       "./src/index.ts"
-    ]
+    ],
+    "image": "https://raw.githubusercontent.com/cgarrot/pi-voice-stt/main/assets/preview.gif"
   },
   "scripts": {
     "check": "tsc --noEmit",

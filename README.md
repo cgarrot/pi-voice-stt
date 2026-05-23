@@ -1,5 +1,7 @@
 # Pi Voice STT
 
+![Pi Voice STT preview](https://raw.githubusercontent.com/cgarrot/pi-voice-stt/main/assets/preview.gif)
+
 Provider-agnostic speech-to-text dictation for the [Pi coding agent](https://github.com/earendil-works/pi-coding-agent) TUI.
 
 Press `Ctrl+R` to record your microphone, press it again to transcribe and insert the transcript into the active prompt, press `Enter` while recording to transcribe and send it directly to chat, or press `Esc` to cancel recording/transcription.
@@ -32,10 +34,16 @@ This project is intentionally small and hackable: a Pi extension, an `ffmpeg` re
 ### From GitHub
 
 ```bash
-pi install git:github.com/cgarrot/pi-voice-stt
+pi install npm:pi-voice-stt
 ```
 
 Restart Pi or run `/reload`.
+
+GitHub install also works:
+
+```bash
+pi install git:github.com/cgarrot/pi-voice-stt
+```
 
 ### Local development install
 
