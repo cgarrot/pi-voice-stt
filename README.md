@@ -10,7 +10,7 @@ This project is intentionally small and hackable: a Pi extension, an `ffmpeg` re
 
 - Pi TUI extension with `/stt` command and `Ctrl+R` shortcut.
 - `Enter`-to-send and `Esc`-to-cancel while recording.
-- Pi-native animated input indicator, right-aligned in the prompt border (`voice ctrl+r`, `● ▁▂▃ recording`, `⠋ transcribing`).
+- Pi-native animated input indicator, right-aligned in the prompt border (`voice ctrl+r`, `● recording`, `⠋ transcribing`).
 - `ffmpeg` microphone capture to temporary WAV files.
 - Mistral Voxtral provider.
 - OpenAI-compatible provider for OpenAI, Groq, `whisper.cpp`, `faster-whisper` servers, and local endpoints.
@@ -161,7 +161,7 @@ On Linux, you may prefer PulseAudio/PipeWire (`pulse`) or ALSA (`alsa`) dependin
 
 ## Usage
 
-The voice state is displayed inside the input area, right-aligned on the prompt border, so it stays close to where you are typing without taking over the footer/token line. Recording and transcription states animate subtly in place.
+The voice state is displayed inside the input area, right-aligned on the prompt border, so it stays close to where you are typing without taking over the footer/token line. Recording uses a subtle blinking dot; transcription uses a small spinner.
 
 | Action | Behavior |
 | --- | --- |

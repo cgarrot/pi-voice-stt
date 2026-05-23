@@ -134,8 +134,7 @@ class VoiceEditorWrapper implements EditorComponent {
   }
 }
 
-const RECORDING_WAVES = ["▁▂▃", "▂▃▄", "▃▄▅", "▄▅▆", "▅▆▇", "▄▅▆", "▃▄▅", "▂▃▄"];
-const RECORDING_PULSES = ["●", "◉", "◎", "◉"];
+const RECORDING_PULSES = ["●", "●", "●", "·"];
 const PROCESSING_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 export const createInputIndicator = (keybind: string) => {
@@ -180,8 +179,7 @@ export const createInputIndicator = (keybind: string) => {
     renderLabel(theme: Theme): string {
       if (mode === "recording") {
         const pulse = RECORDING_PULSES[tick % RECORDING_PULSES.length] ?? "●";
-        const wave = RECORDING_WAVES[tick % RECORDING_WAVES.length] ?? "▁▂▃";
-        return `${theme.fg("accent", pulse)} ${theme.fg("accent", wave)} ${theme.fg("muted", "recording")} ${theme.fg("dim", "· enter send · esc cancel")}`;
+        return `${theme.fg("accent", pulse)} ${theme.fg("muted", "recording")} ${theme.fg("dim", "· enter send · esc cancel")}`;
       }
 
       if (mode === "processing") {

@@ -1,6 +1,6 @@
 {
   "name": "pi-voice-stt",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Provider-agnostic speech-to-text dictation extension for the Pi TUI.",
   "license": "MIT",
   "type": "module",
