@@ -36,6 +36,7 @@ const waitForPromptAppendFlush = () => new Promise<void>((resolve) => setTimeout
 export const createDictationController = (options: DictationControllerOptions) => {
   let recording: RecordingHandle | undefined;
   let recordingConfig: PluginConfig | undefined;
+  let activeRecordingHandle: RecordingHandle | undefined;
   let activeOperation: Promise<void> | undefined;
   let transcriptionController: AbortController | undefined;
   let processing = false;
@@ -116,6 +117,7 @@ export const createDictationController = (options: DictationControllerOptions) =
     const activeConfig = recordingConfig;
     recording = undefined;
     recordingConfig = undefined;
+    activeRecordingHandle = active;
     if (active.timeout) clearTimeout(active.timeout);
 
     const operation = activeConfig
@@ -128,6 +130,7 @@ export const createDictationController = (options: DictationControllerOptions) =
       if (!cancelRequested && !disposed) throw error;
     } finally {
       if (activeOperation === operation) activeOperation = undefined;
+      activeRecordingHandle = undefined;
       processing = false;
       cancelRequested = false;
       setMode("idle", ctx);
@@ -158,6 +161,9 @@ export const createDictationController = (options: DictationControllerOptions) =
     if (processing) {
       cancelRequested = true;
       transcriptionController?.abort();
+      if (activeRecordingHandle) {
+        await activeRecordingHandle.dispose().catch(() => {});
+      }
       notify(ctx, { title: "Pi Voice STT", message: "Transcription cancelled.", variant: "info" });
       try {
         await activeOperation;

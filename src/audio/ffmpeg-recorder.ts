@@ -59,8 +59,13 @@ export const createFfmpegRecorder = (config: CaptureConfig): AudioRecorder => ({
     let stopped = false;
 
     const terminate = () => {
-      if (process.exitCode !== null || process.killed) return;
-      process.kill("SIGTERM");
+      if (process.exitCode !== null) return;
+      try { process.kill("SIGINT"); } catch { /* already dead */ }
+    };
+
+    const forceKill = () => {
+      if (process.exitCode !== null) return;
+      try { process.kill("SIGKILL"); } catch { /* already dead */ }
     };
 
     const stop = async () => {
@@ -69,7 +74,9 @@ export const createFfmpegRecorder = (config: CaptureConfig): AudioRecorder => ({
         terminate();
       }
 
+      const killTimer = setTimeout(forceKill, 3000);
       const exitResult = await exited;
+      clearTimeout(killTimer);
       const stderrText = getStderr();
 
       let size = 0;
@@ -91,9 +98,11 @@ export const createFfmpegRecorder = (config: CaptureConfig): AudioRecorder => ({
         stopped = true;
         terminate();
       }
+      const killTimer = setTimeout(forceKill, 3000);
       await exited.catch((error: unknown) => {
         console.warn(`Pi Voice STT recording cleanup failed: ${formatError(error)}`);
       });
+      clearTimeout(killTimer);
       await rm(tempDir, { force: true, recursive: true }).catch((error: unknown) => {
         console.warn(`Pi Voice STT temp cleanup failed: ${formatError(error)}`);
       });

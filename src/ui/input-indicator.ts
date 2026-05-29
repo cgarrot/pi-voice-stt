@@ -42,6 +42,46 @@ class VoiceEditorWrapper implements EditorComponent {
     private readonly options: VoiceEditorOptions,
   ) {}
 
+  // Proxy CustomEditor action handlers and app-level callbacks to the base
+  // editor so pi's interactive mode can duck-type and set them properly.
+  // Without this, app.exit (Ctrl+D), app.interrupt (Escape), paste-image,
+  // and extension shortcuts are silently swallowed.
+  private get baseRecord(): Record<string, unknown> {
+    return this.base as unknown as Record<string, unknown>;
+  }
+
+  get actionHandlers(): Map<string, () => void> | undefined {
+    return this.baseRecord.actionHandlers as Map<string, () => void> | undefined;
+  }
+
+  get onCtrlD(): (() => void) | undefined {
+    return this.baseRecord.onCtrlD as (() => void) | undefined;
+  }
+  set onCtrlD(handler: (() => void) | undefined) {
+    this.baseRecord.onCtrlD = handler;
+  }
+
+  get onEscape(): (() => void) | undefined {
+    return this.baseRecord.onEscape as (() => void) | undefined;
+  }
+  set onEscape(handler: (() => void) | undefined) {
+    this.baseRecord.onEscape = handler;
+  }
+
+  get onPasteImage(): (() => void) | undefined {
+    return this.baseRecord.onPasteImage as (() => void) | undefined;
+  }
+  set onPasteImage(handler: (() => void) | undefined) {
+    this.baseRecord.onPasteImage = handler;
+  }
+
+  get onExtensionShortcut(): ((data: string) => void) | undefined {
+    return this.baseRecord.onExtensionShortcut as ((data: string) => void) | undefined;
+  }
+  set onExtensionShortcut(handler: ((data: string) => void) | undefined) {
+    this.baseRecord.onExtensionShortcut = handler;
+  }
+
   private syncBase(): void {
     if (this.onSubmit) this.base.onSubmit = this.onSubmit;
     else delete this.base.onSubmit;
