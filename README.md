@@ -388,6 +388,25 @@ Then set `capture.input`, for example `":0"` or `":1"`.
 
 On Linux, you may prefer PulseAudio/PipeWire (`pulse`) or ALSA (`alsa`) depending on your system.
 
+#### "Recording is too small" / no audio captured
+
+This means the configured audio source produced no data. To fix it:
+
+1. **Microphone permission** — grant microphone access to the terminal running Pi (System Settings → Privacy & Security → Microphone).
+2. **Pick the right source (Linux/PulseAudio).** List sources and target one that actually captures:
+   ```bash
+   pactl list short sources
+   ```
+   Then set, for example, `"inputFormat": "pulse", "input": "alsa_input.pci-0000_00_1b.0.analog-stereo"`.
+3. **Fallback to ALSA** if the PulseAudio default is empty or suspended:
+   ```json
+   { "capture": { "inputFormat": "alsa", "input": "default" } }
+   ```
+   List ALSA devices with `arecord -L` (common inputs: `default`, `hw:0`, `plughw:0`).
+4. **macOS** — confirm the device with `ffmpeg -f avfoundation -list_devices true -i ""` and set `capture.input` (e.g. `":1"`).
+
+You can also lower the threshold with `capture.minBytes` (default `4096`), but a working source should far exceed it. See [docs/macos-bridge.md](docs/macos-bridge.md) for the VPS bridge as an alternative when the VPS has no local microphone.
+
 ## Usage
 
 The voice state is displayed inside the input area, right-aligned on the prompt border, so it stays close to where you are typing without taking over the footer/token line. Recording uses a subtle blinking dot; transcription uses a small horizontal moving dot.

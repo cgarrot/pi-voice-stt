@@ -87,7 +87,12 @@ export const createFfmpegRecorder = (config: FfmpegCaptureConfig): AudioRecorder
       }
 
       if (size < config.minBytes) {
-        throw new Error(`Recording is too small (${size} bytes). Check microphone permission/device. ${truncate(stderrText)}`);
+        throw new Error(
+          `Recording is too small (${size} bytes) — the audio source produced no data. ` +
+            `Check microphone permission and that capture.inputFormat/capture.input point to a real device. ` +
+            `On Linux, if the default PulseAudio source is empty, try ALSA (inputFormat "alsa", input "default"; list with: arecord -L). ` +
+            truncate(stderrText),
+        );
       }
 
       return outputPath;
