@@ -7,6 +7,7 @@ import { resolvePath } from "../utils/path";
 export type StartupOptions = {
   configPath: string;
   keybind: string;
+  locale: string;
 };
 
 export const DEFAULT_CONFIG_PATH = join(homedir(), ".pi", "agent", "stt.json");
@@ -21,6 +22,7 @@ export const resolveStartupOptions = (): StartupOptions => {
   const configPath = envConfigPath ? resolvePath(envConfigPath) : existsSync(DEFAULT_CONFIG_PATH) ? DEFAULT_CONFIG_PATH : "";
   const config = readJsonIfPresent(configPath);
   const keybind = textFrom(process.env.PI_STT_KEYBIND, textFrom(config.keybind, "ctrl+r"));
+  const locale = textFrom(process.env.PI_STT_LOCALE, textFrom(config.locale, "en"));
 
-  return { configPath, keybind };
+  return { configPath, keybind, locale };
 };

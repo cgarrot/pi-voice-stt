@@ -9,6 +9,7 @@ import {
   type TUI,
 } from "@earendil-works/pi-tui";
 import type { DictationMode } from "../core/dictation-controller";
+import type { Strings } from "../i18n/strings";
 
 type VoiceEditorOptions = {
   keybind: string;
@@ -189,7 +190,7 @@ class VoiceEditorWrapper implements EditorComponent {
 
 const PROCESSING_FRAMES = ["•  ", " • ", "  •", " • "];
 
-export const createInputIndicator = (keybind: string) => {
+export const createInputIndicator = (keybind: string, strings: Strings) => {
   let mode: DictationMode = "idle";
   let tui: TUI | undefined;
   let tick = 0;
@@ -232,15 +233,15 @@ export const createInputIndicator = (keybind: string) => {
       if (mode === "recording") {
         // Clear on/off blink in red so the recording state is obvious.
         const dot = tick % 2 === 0 ? "●" : "○";
-        return `${theme.fg("error", dot)} ${theme.fg("error", "recording")} ${theme.fg("dim", "· enter send · esc cancel")}`;
+        return `${theme.fg("error", dot)} ${theme.fg("error", strings.indicator.recording)} ${theme.fg("dim", strings.indicator.recordingHint)}`;
       }
 
       if (mode === "processing") {
         const frame = PROCESSING_FRAMES[tick % PROCESSING_FRAMES.length] ?? "…";
-        return `${theme.fg("warning", frame)} ${theme.fg("warning", "transcribing")} ${theme.fg("dim", "· esc cancel")}`;
+        return `${theme.fg("warning", frame)} ${theme.fg("warning", strings.indicator.transcribing)} ${theme.fg("dim", strings.indicator.transcribingHint)}`;
       }
 
-      return `${theme.fg("dim", "voice")} ${theme.fg("accent", keybind)}`;
+      return `${theme.fg("dim", strings.indicator.idle)} ${theme.fg("accent", keybind)}`;
     },
     dispose() {
       stopAnimation();

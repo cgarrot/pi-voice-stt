@@ -6,6 +6,7 @@ import { createDictationController, type DictationToast } from "./core/dictation
 import { createProvider } from "./providers/factory";
 import { assertProviderReady } from "./providers/readiness";
 import { createInputIndicator, createVoiceEditorFactory } from "./ui/input-indicator";
+import { resolveStrings } from "./i18n/strings";
 import { formatError } from "./utils/text";
 
 const toastType = (variant: DictationToast["variant"]): "info" | "warning" | "error" => {
@@ -27,12 +28,14 @@ const reportError = (ctx: ExtensionContext | undefined, error: unknown): void =>
 export default function piVoiceSttExtension(pi: ExtensionAPI) {
   const startup = resolveStartupOptions();
   const keybind = startup.keybind;
-  const inputIndicator = createInputIndicator(keybind);
+  const strings = resolveStrings(startup.locale);
+  const inputIndicator = createInputIndicator(keybind, strings);
 
   const getConfig = () => loadConfig({ configPath: startup.configPath });
 
   const controller = createDictationController({
     keybind,
+    strings,
     loadConfig: getConfig,
     createRecorder: (config) => createFfmpegRecorder(config.capture),
     createProvider: (config) => createProvider(config.provider),
@@ -43,7 +46,7 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
     submitPrompt: async (ctx) => {
       const prompt = ctx.ui.getEditorText().trimEnd();
       if (!prompt) {
-        notify(ctx, { title: "Pi Voice STT", message: "Transcript is empty; nothing to send.", variant: "warning" });
+        notify(ctx, { title: "Pi Voice STT", message: strings.toast.emptyTranscript, variant: "warning" });
         return;
       }
 

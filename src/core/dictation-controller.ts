@@ -2,6 +2,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { AudioRecorder, RecordingHandle } from "../audio/types";
 import type { PluginConfig } from "../config/types";
 import { assertProviderReady } from "../providers/readiness";
+import type { Strings } from "../i18n/strings";
 import { formatTranscriptForPrompt } from "./output";
 
 export type DictationMode = "idle" | "recording" | "processing";
@@ -15,6 +16,7 @@ export type DictationToast = {
 
 export type DictationControllerOptions = {
   keybind: string;
+  strings: Strings;
   loadConfig(): Promise<PluginConfig>;
   createRecorder(config: PluginConfig): AudioRecorder;
   createProvider(config: PluginConfig): { transcribe(input: { audioPath: string; language?: string; signal: AbortSignal }): Promise<{ text: string }> };
@@ -77,7 +79,7 @@ export const createDictationController = (options: DictationControllerOptions) =
     const timeout = setTimeout(() => controller.abort(), config.provider.timeoutSeconds * 1000);
 
     try {
-      notify(ctx, { title: "Pi Voice STT", message: "Stopping recording and transcribing…", variant: "info" });
+      notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.stopping, variant: "info" });
       const audioPath = await active.stop();
       if (disposed) return;
       const result = await provider.transcribe({ audioPath, language: config.provider.language, signal: controller.signal });
@@ -90,7 +92,7 @@ export const createDictationController = (options: DictationControllerOptions) =
       if (!cancelRequested) {
         notify(ctx, {
           title: "Pi Voice STT",
-          message: stopOptions.submitAfterAppend ? "Transcript sent to chat." : "Transcript inserted into prompt.",
+          message: stopOptions.submitAfterAppend ? options.strings.toast.sent : options.strings.toast.inserted,
           variant: "success",
         });
       }
@@ -105,7 +107,7 @@ export const createDictationController = (options: DictationControllerOptions) =
     rememberContext(ctx);
     if (disposed) return;
     if (processing) {
-      notify(ctx, { title: "Pi Voice STT", message: "Still processing the previous recording…", variant: "warning" });
+      notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.stillProcessing, variant: "warning" });
       return;
     }
 
@@ -154,7 +156,7 @@ export const createDictationController = (options: DictationControllerOptions) =
       await cancelActiveRecording(active);
       cancelRequested = false;
       setMode("idle", ctx);
-      notify(ctx, { title: "Pi Voice STT", message: "Recording cancelled.", variant: "info" });
+      notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.recordingCancelled, variant: "info" });
       return;
     }
 
@@ -164,7 +166,7 @@ export const createDictationController = (options: DictationControllerOptions) =
       if (activeRecordingHandle) {
         await activeRecordingHandle.dispose().catch(() => {});
       }
-      notify(ctx, { title: "Pi Voice STT", message: "Transcription cancelled.", variant: "info" });
+      notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.transcriptionCancelled, variant: "info" });
       try {
         await activeOperation;
       } catch {
@@ -192,7 +194,7 @@ export const createDictationController = (options: DictationControllerOptions) =
       setMode("recording", ctx);
       notify(ctx, {
         title: "Pi Voice STT",
-        message: `Recording… press ${options.keybind} again to stop, Enter to send, or Esc to cancel.`,
+        message: options.strings.toast.startRecording(options.keybind),
         variant: "info",
         duration: 5000,
       });

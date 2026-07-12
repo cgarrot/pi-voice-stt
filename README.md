@@ -93,6 +93,18 @@ or a top-level `keybind` in the config file. Environment wins at startup.
 - `appendTrailingSpace` (default `true`): append a space after the inserted transcript.
 - `submitOnStop` (default `false`): when `true`, stopping a recording with the `Ctrl+R` toggle also sends the transcript to chat (same as pressing `Enter` while recording) instead of only inserting it into the prompt. Hands-free dictation: `Ctrl+R` to start, `Ctrl+R` to stop-and-send, `Esc` to cancel.
 
+### Localization
+
+Runtime labels and toasts default to English. Switch them with the top-level `locale` setting (or the `PI_STT_LOCALE` environment variable). Built-in packs: `en` (default) and `fr`.
+
+```json
+{
+  "locale": "fr"
+}
+```
+
+Like the keybinding, the locale is resolved when the extension loads — restart Pi or run `/reload` after changing it. A ready-to-copy French config is provided in [`examples/stt.fr.json`](examples/stt.fr.json). The product name is never localized.
+
 ### Mistral Voxtral
 
 ```json
