@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { CaptureConfig } from "../config/types";
+import type { FfmpegCaptureConfig } from "../config/types";
 import { formatError, truncate } from "../utils/text";
 import type { AudioRecorder, RecordingHandle } from "./types";
 
@@ -28,7 +28,7 @@ const waitForExit = (process: ChildProcess): Promise<string> => {
   });
 };
 
-export const createFfmpegRecorder = (config: CaptureConfig): AudioRecorder => ({
+export const createFfmpegRecorder = (config: FfmpegCaptureConfig): AudioRecorder => ({
   start() {
     const tempDir = mkdtempSync(join(tmpdir(), "pi-voice-stt-"));
     const outputPath = join(tempDir, "recording.wav");

@@ -166,7 +166,7 @@ export const createDictationController = (options: DictationControllerOptions) =
       if (!cancelRequested && !disposed) throw error;
     } finally {
       if (activeOperation === operation) activeOperation = undefined;
-      activeRecordingHandle = undefined;
+      if (activeRecordingHandle === active) activeRecordingHandle = undefined;
       processing = false;
       cancelRequested = false;
       setMode("idle", ctx);
@@ -217,7 +217,7 @@ export const createDictationController = (options: DictationControllerOptions) =
       if (disposed) return;
       assertProviderReady(config.provider);
       const recorder = options.createRecorder(config);
-      recording = recorder.start();
+      recording = await recorder.start();
       recordingConfig = config;
       recording.timeout = setTimeout(() => {
         if (!recording || processing || disposed) return;
@@ -251,6 +251,8 @@ export const createDictationController = (options: DictationControllerOptions) =
     transcriptionController?.abort();
     const operation = activeOperation;
     if (!recording) {
+      const active = activeRecordingHandle;
+      if (active) await active.dispose().catch(() => {});
       await operation?.catch(() => {});
       setMode("idle", lastContext);
       return;

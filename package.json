@@ -33,6 +33,7 @@
   "files": [
     "src",
     "examples",
+    "tools",
     "assets",
     "README.md",
     "LICENSE",

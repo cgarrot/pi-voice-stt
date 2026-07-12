@@ -18,7 +18,7 @@ export const createMistralProvider = (config: MistralProviderConfig): SttProvide
       missingKeyMessage: "Missing Mistral API key. Set MISTRAL_API_KEY or configure provider.apiKeyEnv/keychainService/keychainAccount.",
     });
     const text = textFrom(objectFrom(payload).text);
-    if (!text) throw new Error("Mistral transcription response did not include text.");
+    if (!text) throw new Error("Mistral transcription returned empty text. This usually means the audio was silent or the microphone was not captured.");
     return { text };
   },
 });

@@ -35,6 +35,47 @@ const withConfig = async (payload: unknown, run: (configPath: string) => Promise
   }
 };
 
+test("loadConfig supports bridge capture", async () => {
+  await withConfig({
+    capture: {
+      type: "bridge",
+      endpoint: "http://127.0.0.1:18765",
+      token: "bridge-secret",
+      requestTimeoutSeconds: 3,
+      maxSeconds: 30,
+    },
+    provider: { type: "groq", apiKey: "test", language: "fr" },
+  }, async (configPath) => {
+    const config = await loadConfig({ configPath });
+    assert.equal(config.capture.type, "bridge");
+    assert.equal(config.capture.endpoint, "http://127.0.0.1:18765");
+    assert.equal(config.capture.token, "bridge-secret");
+    assert.equal(config.capture.requestTimeoutSeconds, 3);
+    assert.equal(config.capture.maxSeconds, 30);
+    assert.equal(config.provider.apiKey, "test");
+  });
+});
+
+test("loadConfig supports API key files", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "pi-voice-stt-test-"));
+  const apiKeyPath = join(dir, "provider.env");
+  const configPath = join(dir, "config.json");
+  await writeFile(apiKeyPath, "export MISTRAL_API_KEY='file-secret'\n", "utf8");
+  await writeFile(configPath, JSON.stringify({ provider: { type: "mistral", apiKeyFile: apiKeyPath } }), "utf8");
+  const previousKey = process.env.MISTRAL_API_KEY;
+  delete process.env.MISTRAL_API_KEY;
+
+  try {
+    const config = await loadConfig({ configPath });
+    assert.equal(config.provider.type, "mistral");
+    assert.equal(config.provider.apiKey, "file-secret");
+  } finally {
+    if (previousKey === undefined) delete process.env.MISTRAL_API_KEY;
+    else process.env.MISTRAL_API_KEY = previousKey;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("loadConfig supports Groq convenience provider", async () => {
   await withConfig({ provider: { type: "groq", apiKey: "test", language: "fr" } }, async (configPath) => {
     const config = await loadConfig({ configPath });

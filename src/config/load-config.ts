@@ -1,9 +1,11 @@
 import { readFile } from "node:fs/promises";
 import {
   defaultAssemblyAiProviderConfig,
+  defaultBridgeCaptureConfig,
   defaultCaptureConfig,
   defaultCleanupConfig,
   defaultDeepgramProviderConfig,
+  defaultFfmpegCaptureConfig,
   defaultElevenLabsProviderConfig,
   defaultGladiaProviderConfig,
   defaultMistralProviderConfig,
@@ -14,9 +16,11 @@ import {
 import { secureEndpointFrom } from "./endpoint";
 import type {
   AssemblyAiProviderConfig,
+  BridgeCaptureConfig,
   CaptureConfig,
   CleanupConfig,
   DeepgramProviderConfig,
+  FfmpegCaptureConfig,
   ElevenLabsProviderConfig,
   GladiaProviderConfig,
   MistralProviderConfig,
@@ -50,31 +54,78 @@ const mergedInput = async (options: Record<string, unknown>): Promise<Record<str
   return deepMerge(merged, modeOverrideFrom(fileConfig, modeName));
 };
 
-const captureFrom = (merged: Record<string, unknown>): CaptureConfig => {
-  const capture = objectFrom(merged.capture);
-  return {
-    type: "ffmpeg",
-    ffmpegPath: textFrom(capture.ffmpegPath, textFrom(capture.ffmpeg, textFrom(merged.ffmpeg, defaultCaptureConfig.ffmpegPath))),
-    inputFormat: textFrom(capture.inputFormat, textFrom(merged.inputFormat, defaultCaptureConfig.inputFormat)),
-    input: textFrom(capture.input, textFrom(merged.input, defaultCaptureConfig.input)),
-    sampleRate: positiveIntegerFrom(capture.sampleRate ?? merged.sampleRate, defaultCaptureConfig.sampleRate),
-    channels: positiveIntegerFrom(capture.channels ?? merged.channels, defaultCaptureConfig.channels),
-    maxSeconds: positiveIntegerFrom(capture.maxSeconds ?? merged.maxSeconds, defaultCaptureConfig.maxSeconds),
-    minBytes: Math.max(44, positiveIntegerFrom(capture.minBytes ?? merged.minBytes, defaultCaptureConfig.minBytes)),
-  };
+const readTextFile = async (filePath: string, label: string): Promise<string> => {
+  const resolved = resolvePath(filePath);
+  try {
+    return await readFile(resolved, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") throw new Error(`${label} does not exist: ${resolved}`);
+    throw new Error(`Cannot read ${label} ${resolved}: ${formatError(error)}`);
+  }
 };
-
-const secretSourceFrom = (merged: Record<string, unknown>, provider: Record<string, unknown>): Record<string, unknown> => ({
-  apiKey: provider.apiKey ?? merged.apiKey,
-  apiKeyEnv: provider.apiKeyEnv ?? merged.apiKeyEnv,
-  keychainService: provider.keychainService ?? merged.keychainService,
-  keychainAccount: provider.keychainAccount ?? merged.keychainAccount,
-});
 
 const envNameFrom = (value: unknown, fallback: string): string => {
   if (typeof value === "string") return value.trim();
   return fallback;
 };
+
+const commonCaptureFields = (
+  capture: Record<string, unknown>,
+  merged: Record<string, unknown>,
+  defaults: { maxSeconds: number; minBytes: number },
+) => ({
+  maxSeconds: positiveIntegerFrom(capture.maxSeconds ?? merged.maxSeconds, defaults.maxSeconds),
+  minBytes: Math.max(44, positiveIntegerFrom(capture.minBytes ?? merged.minBytes, defaults.minBytes)),
+});
+
+const ffmpegCaptureFrom = (merged: Record<string, unknown>, capture: Record<string, unknown>): FfmpegCaptureConfig => ({
+  type: "ffmpeg",
+  ffmpegPath: textFrom(capture.ffmpegPath, textFrom(capture.ffmpeg, textFrom(merged.ffmpeg, defaultFfmpegCaptureConfig.ffmpegPath))),
+  inputFormat: textFrom(capture.inputFormat, textFrom(merged.inputFormat, defaultFfmpegCaptureConfig.inputFormat)),
+  input: textFrom(capture.input, textFrom(merged.input, defaultFfmpegCaptureConfig.input)),
+  sampleRate: positiveIntegerFrom(capture.sampleRate ?? merged.sampleRate, defaultFfmpegCaptureConfig.sampleRate),
+  channels: positiveIntegerFrom(capture.channels ?? merged.channels, defaultFfmpegCaptureConfig.channels),
+  ...commonCaptureFields(capture, merged, defaultFfmpegCaptureConfig),
+});
+
+const bridgeCaptureFrom = async (merged: Record<string, unknown>, capture: Record<string, unknown>): Promise<BridgeCaptureConfig> => {
+  const tokenEnv = envNameFrom(capture.tokenEnv ?? merged.bridgeTokenEnv, defaultBridgeCaptureConfig.tokenEnv);
+  const tokenFile = textFrom(capture.tokenFile, textFrom(merged.bridgeTokenFile, defaultBridgeCaptureConfig.tokenFile));
+  const explicitToken = textFrom(capture.token, textFrom(merged.bridgeToken));
+  const envToken = tokenEnv ? textFrom(process.env[tokenEnv]) : "";
+  const fileToken = !explicitToken && !envToken && tokenFile ? textFrom(await readTextFile(tokenFile, "STT bridge token file")) : "";
+
+  return {
+    type: "bridge",
+    endpoint: secureEndpointFrom(capture.endpoint ?? merged.bridgeEndpoint, defaultBridgeCaptureConfig.endpoint),
+    token: explicitToken || envToken || fileToken,
+    tokenEnv,
+    tokenFile,
+    requestTimeoutSeconds: positiveIntegerFrom(
+      capture.requestTimeoutSeconds ?? merged.bridgeRequestTimeoutSeconds,
+      defaultBridgeCaptureConfig.requestTimeoutSeconds,
+    ),
+    ...commonCaptureFields(capture, merged, defaultBridgeCaptureConfig),
+  };
+};
+
+const captureFrom = async (merged: Record<string, unknown>): Promise<CaptureConfig> => {
+  const capture = objectFrom(merged.capture);
+  const captureType = textFrom(capture.type, textFrom(merged.capture, defaultFfmpegCaptureConfig.type)).toLowerCase();
+
+  if (captureType === "ffmpeg") return ffmpegCaptureFrom(merged, capture);
+  if (captureType === "bridge") return bridgeCaptureFrom(merged, capture);
+
+  throw new Error(`Unsupported STT capture type: ${captureType}`);
+};
+
+const secretSourceFrom = (merged: Record<string, unknown>, provider: Record<string, unknown>): Record<string, unknown> => ({
+  apiKey: provider.apiKey ?? merged.apiKey,
+  apiKeyEnv: provider.apiKeyEnv ?? merged.apiKeyEnv,
+  apiKeyFile: provider.apiKeyFile ?? merged.apiKeyFile,
+  keychainService: provider.keychainService ?? merged.keychainService,
+  keychainAccount: provider.keychainAccount ?? merged.keychainAccount,
+});
 
 const commonProviderFields = async <TDefault extends { apiKeyEnv: string; timeoutSeconds: number }>(
   merged: Record<string, unknown>,
@@ -86,6 +137,7 @@ const commonProviderFields = async <TDefault extends { apiKeyEnv: string; timeou
     timeoutSeconds: positiveIntegerFrom(provider.timeoutSeconds ?? merged.requestTimeoutSeconds, defaults.timeoutSeconds),
     apiKey: await resolveApiKey(secrets, defaults.apiKeyEnv),
     apiKeyEnv: envNameFrom(secrets.apiKeyEnv, defaults.apiKeyEnv),
+    apiKeyFile: textFrom(secrets.apiKeyFile),
     keychainService: textFrom(secrets.keychainService),
     keychainAccount: textFrom(secrets.keychainAccount),
   };
@@ -208,6 +260,7 @@ const cleanupFrom = async (merged: Record<string, unknown>): Promise<CleanupConf
     timeoutSeconds: positiveIntegerFrom(cleanup.timeoutSeconds, defaultCleanupConfig.timeoutSeconds),
     apiKey: await resolveApiKey(cleanup, defaultCleanupConfig.apiKeyEnv),
     apiKeyEnv: textFrom(cleanup.apiKeyEnv, defaultCleanupConfig.apiKeyEnv),
+    apiKeyFile: textFrom(cleanup.apiKeyFile),
     keychainService: textFrom(cleanup.keychainService),
     keychainAccount: textFrom(cleanup.keychainAccount),
   };
@@ -226,7 +279,7 @@ const commandsFrom = (merged: Record<string, unknown>): VoiceCommandsConfig => {
 export const loadConfig = async (options: Record<string, unknown> = {}): Promise<PluginConfig> => {
   const merged = await mergedInput(options);
   return {
-    capture: captureFrom(merged),
+    capture: await captureFrom(merged),
     provider: await providerFrom(merged),
     output: outputFrom(merged),
     cleanup: await cleanupFrom(merged),
