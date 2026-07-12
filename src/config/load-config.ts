@@ -26,6 +26,8 @@ import type {
 import { resolveApiKey } from "../secrets/resolve-api-key";
 import { booleanFrom, objectFrom, positiveIntegerFrom, stringArrayFrom, stringMapFrom, textFrom } from "../utils/coerce";
 import { resolvePath } from "../utils/path";
+import { deepMerge } from "../utils/merge";
+import { modeOverrideFrom } from "../core/modes";
 import { formatError } from "../utils/text";
 
 export const readConfigFile = async (filePath: string): Promise<Record<string, unknown>> => {
@@ -41,7 +43,9 @@ export const readConfigFile = async (filePath: string): Promise<Record<string, u
 
 const mergedInput = async (options: Record<string, unknown>): Promise<Record<string, unknown>> => {
   const fileConfig = await readConfigFile(textFrom(options.configPath));
-  return { ...options, ...fileConfig };
+  const modeName = textFrom(options.mode, textFrom(fileConfig.mode, "default"));
+  const merged = { ...options, ...fileConfig };
+  return deepMerge(merged, modeOverrideFrom(fileConfig, modeName));
 };
 
 const captureFrom = (merged: Record<string, unknown>): CaptureConfig => {

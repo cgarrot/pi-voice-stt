@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Modes: named presets (`mode` / `modes`, `/stt mode <name>`) that deep-merge
+  over the base config. Built-in `default` and `raw` (skips cleanup).
 - `output.replacements`: a literal, case-insensitive dictionary applied to the
   raw transcript before cleanup (e.g. `{ "super base": "Supabase" }`).
 - `provider.language: "auto"` (and empty) now explicitly auto-detects the

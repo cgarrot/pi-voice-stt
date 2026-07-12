@@ -1,8 +1,9 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { createFfmpegRecorder } from "./audio/ffmpeg-recorder";
-import { loadConfig } from "./config/load-config";
+import { loadConfig, readConfigFile } from "./config/load-config";
 import { resolveStartupOptions } from "./config/startup";
 import { createDictationController, type DictationToast } from "./core/dictation-controller";
+import { DEFAULT_MODE, isKnownMode, listModeNames } from "./core/modes";
 import { createProvider } from "./providers/factory";
 import { createCleanup } from "./cleanup/factory";
 import { assertProviderReady } from "./providers/readiness";
@@ -31,8 +32,9 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
   const keybind = startup.keybind;
   const strings = resolveStrings(startup.locale);
   const inputIndicator = createInputIndicator(keybind, strings);
+  let activeMode = startup.mode || DEFAULT_MODE;
 
-  const getConfig = () => loadConfig({ configPath: startup.configPath });
+  const getConfig = () => loadConfig({ configPath: startup.configPath, mode: activeMode });
 
   const controller = createDictationController({
     keybind,
@@ -62,15 +64,18 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("stt", {
-    description: "Voice dictation controls: start, stop, send, cancel, status, doctor.",
+    description: "Voice dictation controls: start, stop, send, cancel, mode, status, doctor.",
     getArgumentCompletions: (prefix) => {
-      const commands = ["start", "stop", "send", "cancel", "status", "doctor"];
+      const commands = ["start", "stop", "send", "cancel", "mode", "status", "doctor"];
       return commands
         .filter((command) => command.startsWith(prefix.trim().toLowerCase()))
         .map((command) => ({ value: command, label: command }));
     },
     handler: async (args, ctx) => {
-      const action = args.trim().toLowerCase() || "status";
+      const trimmed = args.trim();
+      const [first, ...rest] = trimmed.split(/\s+/);
+      const action = (first || "status").toLowerCase();
+      const param = rest.join(" ").trim();
 
       if (action === "start") {
         if (controller.getMode() === "idle") await controller.toggle(ctx).catch((error: unknown) => reportError(ctx, error));
@@ -93,6 +98,23 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
         return;
       }
 
+      if (action === "mode") {
+        const fileConfig = await readConfigFile(startup.configPath).catch(() => ({}));
+        const names = listModeNames(fileConfig);
+        if (!param) {
+          ctx.ui.notify(`Pi Voice STT mode: ${activeMode} · available: ${names.join(", ")}`, "info");
+          return;
+        }
+        const next = param.toLowerCase();
+        if (!isKnownMode(fileConfig, next)) {
+          ctx.ui.notify(`Unknown mode "${next}". Available: ${names.join(", ")}`, "error");
+          return;
+        }
+        activeMode = next;
+        ctx.ui.notify(`Pi Voice STT mode set to "${activeMode}".`, "info");
+        return;
+      }
+
       if (action === "doctor") {
         try {
           const config = await getConfig();
@@ -107,12 +129,12 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
       }
 
       if (action !== "status") {
-        ctx.ui.notify("Usage: /stt [start|stop|send|cancel|status|doctor]", "error");
+        ctx.ui.notify("Usage: /stt [start|stop|send|cancel|mode <name>|status|doctor]", "error");
         return;
       }
 
       const configPath = startup.configPath || "defaults only (set PI_STT_CONFIG or ~/.pi/agent/stt.json)";
-      ctx.ui.notify(`Pi Voice STT: ${controller.getMode()} · keybind ${keybind} · config ${configPath}`, "info");
+      ctx.ui.notify(`Pi Voice STT: ${controller.getMode()} · mode ${activeMode} · keybind ${keybind} · config ${configPath}`, "info");
     },
   });
 

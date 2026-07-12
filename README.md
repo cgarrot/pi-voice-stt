@@ -114,6 +114,23 @@ Runtime labels and toasts default to English. Switch them with the top-level `lo
 
 Like the keybinding, the locale is resolved when the extension loads — restart Pi or run `/reload` after changing it. A ready-to-copy French config is provided in [`examples/stt.fr.json`](examples/stt.fr.json). The product name is never localized.
 
+### Modes
+
+Modes are named presets that override any part of the configuration. Built-in modes: `default` (no overrides) and `raw` (skips AI cleanup). Define your own under `modes` and switch at runtime with `/stt mode <name>` (or set a default via the top-level `mode` setting / `PI_STT_MODE`).
+
+```json
+{
+  "mode": "default",
+  "cleanup": { "enabled": true, "endpoint": "https://api.openai.com/v1/chat/completions", "model": "gpt-4o-mini", "apiKeyEnv": "OPENAI_API_KEY" },
+  "modes": {
+    "raw": { "cleanup": { "enabled": false } },
+    "commit": { "cleanup": { "language": "en", "prompt": "Rewrite the dictation as a concise, imperative git commit subject line." } }
+  }
+}
+```
+
+A user mode overrides the built-in of the same name. `/stt mode` with no argument prints the active mode and the available list. The mode applies on top of the base config, so it can change the provider, cleanup, language or replacements.
+
 ### Smart cleanup (AI)
 
 Optionally run the raw transcript through an LLM before it is inserted, to fix punctuation, capitalization, remove filler words and spell project-specific terms correctly. Disabled by default. Because Pi exposes no one-shot inference API, cleanup calls its own OpenAI-compatible chat endpoint (works with OpenAI, Groq, Mistral or a local server), reusing the same secret resolution as the STT providers.
@@ -322,6 +339,7 @@ The voice state is displayed inside the input area, right-aligned on the prompt 
 | `/stt stop` | Stop and insert transcript |
 | `/stt send` | Stop and send to chat |
 | `/stt cancel` | Cancel active recording/transcription |
+| `/stt mode [name]` | Show or switch the active preset (`default`, `raw`, or your own) |
 
 ## Secret handling
 

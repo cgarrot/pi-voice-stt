@@ -8,6 +8,7 @@ export type StartupOptions = {
   configPath: string;
   keybind: string;
   locale: string;
+  mode: string;
 };
 
 export const DEFAULT_CONFIG_PATH = join(homedir(), ".pi", "agent", "stt.json");
@@ -23,6 +24,7 @@ export const resolveStartupOptions = (): StartupOptions => {
   const config = readJsonIfPresent(configPath);
   const keybind = textFrom(process.env.PI_STT_KEYBIND, textFrom(config.keybind, "ctrl+r"));
   const locale = textFrom(process.env.PI_STT_LOCALE, textFrom(config.locale, "en"));
+  const mode = textFrom(process.env.PI_STT_MODE, textFrom(config.mode, "default"));
 
-  return { configPath, keybind, locale };
+  return { configPath, keybind, locale, mode };
 };
