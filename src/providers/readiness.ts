@@ -21,12 +21,12 @@ const providerDisplayName = (type: ProviderConfig["type"]): string => {
 export const assertProviderReady = (config: ProviderConfig): void => {
   if (config.type === "openai-compatible") {
     if (endpointRequiresAuth(config.endpoint) && !config.apiKey) {
-      throw new Error("Missing STT API key for non-local OpenAI-compatible endpoint. Set provider.apiKeyEnv or provider.apiKey.");
+      throw new Error("Missing STT API key for non-local OpenAI-compatible endpoint. Set provider.apiKeyEnv, provider.apiKeyFile, or provider.apiKey.");
     }
     return;
   }
 
   if (!config.apiKey) {
-    throw new Error(`Missing ${providerDisplayName(config.type)} API key. Set provider.apiKeyEnv, provider.apiKey, or macOS Keychain settings.`);
+    throw new Error(`Missing ${providerDisplayName(config.type)} API key. Set provider.apiKeyEnv, provider.apiKeyFile, provider.apiKey, or macOS Keychain settings.`);
   }
 };

@@ -6,7 +6,7 @@ Provider-agnostic speech-to-text dictation for the [Pi coding agent](https://git
 
 Press `Ctrl+R` to record your microphone, press it again to transcribe and insert the transcript into the active prompt, press `Enter` while recording to transcribe and send it directly to chat, or press `Esc` to cancel recording/transcription.
 
-This project is intentionally small and hackable: a Pi extension, an `ffmpeg` recorder, and OpenAI-compatible/Mistral transcription providers.
+This project is intentionally small and hackable: a Pi extension, local/bridge audio recorders, and OpenAI-compatible/Mistral transcription providers.
 
 ## Features
 
@@ -14,6 +14,7 @@ This project is intentionally small and hackable: a Pi extension, an `ffmpeg` re
 - `Enter`-to-send and `Esc`-to-cancel while recording.
 - Pi-native animated input indicator, right-aligned in the prompt border (`voice ctrl+r`, `● recording`, `• transcribing`).
 - `ffmpeg` microphone capture to temporary WAV files.
+- Optional Mac microphone bridge for Pi sessions running on a VPS over SSH.
 - Mistral Voxtral provider.
 - OpenAI / Groq / generic OpenAI-compatible provider for hosted and local Whisper-style endpoints.
 - Native provider integrations for Deepgram, ElevenLabs Scribe, Gladia, and AssemblyAI.
@@ -26,7 +27,7 @@ This project is intentionally small and hackable: a Pi extension, an `ffmpeg` re
 - Pi `>= 0.75`.
 - Node.js `>= 20` when developing locally.
 - `ffmpeg` available in `PATH` or configured with `capture.ffmpegPath`.
-- Microphone permission for the terminal app running Pi.
+- Microphone permission for the terminal app running Pi, or for the Mac bridge daemon when using `capture.type: "bridge"`.
 - A transcription backend (Mistral, OpenAI/Groq, Deepgram, ElevenLabs, Gladia, AssemblyAI, or a local OpenAI-compatible server).
 
 ## Installation
@@ -324,9 +325,52 @@ You can also use `model: "whisper-1"` or any OpenAI transcription model supporte
 
 Plain HTTP is accepted only for `localhost`, `127.0.0.1`, or `::1`.
 
+### Mac microphone bridge for VPS usage
+
+Use this when Pi runs on a VPS but your real microphone is on your Mac. The extension keeps the same `Ctrl+R` UX, but audio capture is delegated to a small local Mac daemon through a reverse SSH tunnel. The bridge is **opt-in**: it only activates when you set `capture.type: "bridge"` — the default `ffmpeg` recorder is unchanged.
+
+> See **[docs/macos-bridge.md](docs/macos-bridge.md)** for the full setup guide (architecture, prerequisites, security model, troubleshooting, uninstall).
+
+**1. On your Mac**, run the installer with the SSH alias of your VPS (as configured in `~/.ssh/config`):
+
+```bash
+tools/install-macos-bridge.sh my-vps
+```
+
+This installs the daemon, a reverse-SSH-tunnel LaunchAgent, generates a shared bearer token, and adds a `<vps>-voice-tunnel` SSH host with `RemoteForward`. See the installer header (`tools/install-macos-bridge.sh`) for env overrides (port, node/ffmpeg/cmux paths).
+
+**2. Copy the token to your VPS** so Pi on the VPS can authenticate to the tunnel:
+
+```bash
+scp ~/.config/pi-voice-stt-bridge/token my-vps:~/.pi/agent/pi-voice-stt-bridge.token
+```
+
+**3. On your VPS**, point Pi at the bridge (e.g. `~/.pi/agent/stt.json`):
+
+```json
+{
+  "capture": {
+    "type": "bridge",
+    "endpoint": "http://127.0.0.1:18765",
+    "tokenFile": "~/.pi/agent/pi-voice-stt-bridge.token",
+    "requestTimeoutSeconds": 30,
+    "maxSeconds": 120,
+    "minBytes": 4096
+  },
+  "provider": {
+    "type": "groq",
+    "model": "whisper-large-v3-turbo",
+    "apiKeyEnv": "GROQ_API_KEY",
+    "language": "fr"
+  }
+}
+```
+
+Run `/stt doctor` in Pi to verify the bridge health. The daemon only accesses the microphone when Pi calls `/start` after `Ctrl+R`; `/stop` returns the WAV to the VPS for transcription by your configured provider. On macOS the installer prefers a tiny native background app (`Pi Voice STT Bridge.app`) so microphone permission works without keeping a terminal open — the first `/start` may trigger a permission prompt.
+
 ## Audio capture notes
 
-The extension records through `ffmpeg`. Platform defaults are:
+With `capture.type: "ffmpeg"`, the extension records through `ffmpeg`. Platform defaults are:
 
 | OS | `inputFormat` | `input` |
 | --- | --- | --- |
@@ -355,7 +399,7 @@ The voice state is displayed inside the input area, right-aligned on the prompt 
 | `Enter` while recording | Stop, transcribe, insert transcript, send prompt to chat |
 | `Esc` while recording/processing | Cancel recording or transcription |
 | `/stt status` | Show current mode and config source |
-| `/stt doctor` | Check config, provider readiness, and `ffmpeg -version` |
+| `/stt doctor` | Check config, provider readiness, and local `ffmpeg` or bridge health |
 | `/stt start` | Start recording |
 | `/stt stop` | Stop and insert transcript |
 | `/stt send` | Stop and send to chat |
@@ -374,6 +418,17 @@ export DEEPGRAM_API_KEY=...
 export ELEVENLABS_API_KEY=...
 export GLADIA_API_KEY=...
 export ASSEMBLYAI_API_KEY=...
+```
+
+You can also point at a file containing either the raw key or an env-style line such as `export MISTRAL_API_KEY=...`:
+
+```json
+{
+  "provider": {
+    "type": "mistral",
+    "apiKeyFile": "~/.config/opencode/voxtral-stt.env"
+  }
+}
 ```
 
 On macOS, you can also use Keychain:
@@ -409,11 +464,12 @@ Project layout:
 ```text
 src/index.ts                 Pi extension entry point
 src/core/                    dictation state machine
-src/audio/                   ffmpeg recorder
+src/audio/                   ffmpeg and bridge recorders
 src/providers/               STT provider abstraction
 src/config/                  config loading and validation
 src/ui/                      Pi TUI input indicator and editor wrapper
 examples/                    ready-to-copy config files
+tools/                       optional Mac bridge daemon/installer
 ```
 
 ## Design goals
@@ -423,7 +479,7 @@ examples/                    ready-to-copy config files
 - Match Pi's TUI style by default: compact input-border status instead of a separate footer widget.
 - Avoid storing secrets in sessions or config examples.
 - Use only Node built-ins at runtime.
-- Fail safely: clean up temporary files and stop `ffmpeg` on cancel, reload, or exit.
+- Fail safely: clean up temporary files and stop local or bridged `ffmpeg` on cancel, reload, or exit.
 
 ## License
 

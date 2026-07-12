@@ -1,8 +1,10 @@
 import type {
   AssemblyAiProviderConfig,
+  BridgeCaptureConfig,
   CaptureConfig,
   CleanupConfig,
   DeepgramProviderConfig,
+  FfmpegCaptureConfig,
   ElevenLabsProviderConfig,
   GladiaProviderConfig,
   MistralProviderConfig,
@@ -11,13 +13,13 @@ import type {
   VoiceCommandsConfig,
 } from "./types";
 
-const platformCaptureDefaults = (): Pick<CaptureConfig, "inputFormat" | "input"> => {
+const platformCaptureDefaults = (): Pick<FfmpegCaptureConfig, "inputFormat" | "input"> => {
   if (process.platform === "darwin") return { inputFormat: "avfoundation", input: ":0" };
   if (process.platform === "win32") return { inputFormat: "dshow", input: "audio=Microphone" };
   return { inputFormat: "pulse", input: "default" };
 };
 
-export const defaultCaptureConfig = {
+export const defaultFfmpegCaptureConfig = {
   type: "ffmpeg",
   ffmpegPath: "ffmpeg",
   ...platformCaptureDefaults(),
@@ -25,7 +27,20 @@ export const defaultCaptureConfig = {
   channels: 1,
   maxSeconds: 120,
   minBytes: 4096,
-} satisfies CaptureConfig;
+} satisfies FfmpegCaptureConfig;
+
+export const defaultBridgeCaptureConfig = {
+  type: "bridge",
+  endpoint: "http://127.0.0.1:18765",
+  token: "",
+  tokenEnv: "PI_STT_BRIDGE_TOKEN",
+  tokenFile: "",
+  requestTimeoutSeconds: 30,
+  maxSeconds: 120,
+  minBytes: 4096,
+} satisfies BridgeCaptureConfig;
+
+export const defaultCaptureConfig = defaultFfmpegCaptureConfig;
 
 export const defaultMistralProviderConfig = {
   type: "mistral",
@@ -35,6 +50,7 @@ export const defaultMistralProviderConfig = {
   timeoutSeconds: 120,
   apiKey: "",
   apiKeyEnv: "MISTRAL_API_KEY",
+  apiKeyFile: "",
   keychainService: "",
   keychainAccount: "",
 } satisfies MistralProviderConfig;
@@ -48,6 +64,7 @@ export const defaultOpenAiCompatibleProviderConfig = {
   responseFormat: "json",
   apiKey: "",
   apiKeyEnv: "OPENAI_API_KEY",
+  apiKeyFile: "",
   keychainService: "",
   keychainAccount: "",
 } satisfies OpenAiCompatibleProviderConfig;
@@ -61,6 +78,7 @@ export const defaultDeepgramProviderConfig = {
   smartFormat: true,
   apiKey: "",
   apiKeyEnv: "DEEPGRAM_API_KEY",
+  apiKeyFile: "",
   keychainService: "",
   keychainAccount: "",
 } satisfies DeepgramProviderConfig;
@@ -73,6 +91,7 @@ export const defaultElevenLabsProviderConfig = {
   timeoutSeconds: 120,
   apiKey: "",
   apiKeyEnv: "ELEVENLABS_API_KEY",
+  apiKeyFile: "",
   keychainService: "",
   keychainAccount: "",
 } satisfies ElevenLabsProviderConfig;
@@ -87,6 +106,7 @@ export const defaultGladiaProviderConfig = {
   pollIntervalMs: 1000,
   apiKey: "",
   apiKeyEnv: "GLADIA_API_KEY",
+  apiKeyFile: "",
   keychainService: "",
   keychainAccount: "",
 } satisfies GladiaProviderConfig;
@@ -101,6 +121,7 @@ export const defaultAssemblyAiProviderConfig = {
   pollIntervalMs: 1000,
   apiKey: "",
   apiKeyEnv: "ASSEMBLYAI_API_KEY",
+  apiKeyFile: "",
   keychainService: "",
   keychainAccount: "",
 } satisfies AssemblyAiProviderConfig;
@@ -132,6 +153,7 @@ export const defaultCleanupConfig = {
   timeoutSeconds: 30,
   apiKey: "",
   apiKeyEnv: "OPENAI_API_KEY",
+  apiKeyFile: "",
   keychainService: "",
   keychainAccount: "",
 } satisfies CleanupConfig;

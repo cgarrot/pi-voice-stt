@@ -6,5 +6,5 @@ export type RecordingHandle = {
 };
 
 export type AudioRecorder = {
-  start(): RecordingHandle;
+  start(): RecordingHandle | Promise<RecordingHandle>;
 };

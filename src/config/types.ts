@@ -1,4 +1,4 @@
-export type CaptureConfig = {
+export type FfmpegCaptureConfig = {
   type: "ffmpeg";
   ffmpegPath: string;
   inputFormat: string;
@@ -9,9 +9,23 @@ export type CaptureConfig = {
   minBytes: number;
 };
 
+export type BridgeCaptureConfig = {
+  type: "bridge";
+  endpoint: string;
+  token: string;
+  tokenEnv: string;
+  tokenFile: string;
+  requestTimeoutSeconds: number;
+  maxSeconds: number;
+  minBytes: number;
+};
+
+export type CaptureConfig = FfmpegCaptureConfig | BridgeCaptureConfig;
+
 export type SecretConfig = {
   apiKey: string;
   apiKeyEnv: string;
+  apiKeyFile: string;
   keychainService: string;
   keychainAccount: string;
 };

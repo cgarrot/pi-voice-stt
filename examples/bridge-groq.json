@@ -1,0 +1,19 @@
+{
+  "capture": {
+    "type": "bridge",
+    "endpoint": "http://127.0.0.1:18765",
+    "tokenFile": "~/.pi/agent/pi-voice-stt-bridge.token",
+    "requestTimeoutSeconds": 30,
+    "maxSeconds": 120,
+    "minBytes": 4096
+  },
+  "provider": {
+    "type": "groq",
+    "model": "whisper-large-v3-turbo",
+    "apiKeyEnv": "GROQ_API_KEY",
+    "language": "fr"
+  },
+  "output": {
+    "appendTrailingSpace": true
+  }
+}

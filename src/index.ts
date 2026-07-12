@@ -1,5 +1,6 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { createFfmpegRecorder } from "./audio/ffmpeg-recorder";
+import { checkBridgeRecorderHealth } from "./audio/bridge-recorder";
+import { createRecorder } from "./audio/factory";
 import { loadConfig, readConfigFile } from "./config/load-config";
 import { resolveStartupOptions } from "./config/startup";
 import { createDictationController, type DictationToast } from "./core/dictation-controller";
@@ -40,7 +41,7 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
     keybind,
     strings,
     loadConfig: getConfig,
-    createRecorder: (config) => createFfmpegRecorder(config.capture),
+    createRecorder: (config) => createRecorder(config.capture),
     createProvider: (config) => createProvider(config.provider),
     createCleanup: (config) => createCleanup(config.cleanup),
     appendPrompt: async (ctx, text) => {
@@ -119,9 +120,13 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
         try {
           const config = await getConfig();
           assertProviderReady(config.provider);
-          const ffmpeg = await pi.exec(config.capture.ffmpegPath, ["-version"], { timeout: 5000 });
-          if (ffmpeg.code !== 0) throw new Error(`ffmpeg check failed: ${ffmpeg.stderr || ffmpeg.stdout}`);
-          ctx.ui.notify(`Pi Voice STT ready (${config.provider.type}/${config.provider.model}).`, "info");
+          if (config.capture.type === "bridge") {
+            await checkBridgeRecorderHealth(config.capture);
+          } else {
+            const ffmpeg = await pi.exec(config.capture.ffmpegPath, ["-version"], { timeout: 5000 });
+            if (ffmpeg.code !== 0) throw new Error(`ffmpeg check failed: ${ffmpeg.stderr || ffmpeg.stdout}`);
+          }
+          ctx.ui.notify(`Pi Voice STT ready (${config.capture.type}, ${config.provider.type}/${config.provider.model}).`, "info");
         } catch (error) {
           reportError(ctx, error);
         }
