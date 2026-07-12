@@ -92,6 +92,15 @@ or a top-level `keybind` in the config file. Environment wins at startup.
 
 - `appendTrailingSpace` (default `true`): append a space after the inserted transcript.
 - `submitOnStop` (default `false`): when `true`, stopping a recording with the `Ctrl+R` toggle also sends the transcript to chat (same as pressing `Enter` while recording) instead of only inserting it into the prompt. Hands-free dictation: `Ctrl+R` to start, `Ctrl+R` to stop-and-send, `Esc` to cancel.
+- `replacements` (default `{}`): a literal dictionary applied to the raw transcript before cleanup. Case-insensitive and word-boundary aware; longer keys win. Handy for terms the recognizer mishears:
+
+```json
+{
+  "output": {
+    "replacements": { "super base": "Supabase", "react native": "React Native" }
+  }
+}
+```
 
 ### Localization
 

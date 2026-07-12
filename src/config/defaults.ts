@@ -107,6 +107,7 @@ export const defaultAssemblyAiProviderConfig = {
 export const defaultOutputConfig = {
   appendTrailingSpace: true,
   submitOnStop: false,
+  replacements: {},
 } satisfies OutputConfig;
 
 export const DEFAULT_CLEANUP_PROMPT = [

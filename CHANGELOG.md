@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `output.replacements`: a literal, case-insensitive dictionary applied to the
+  raw transcript before cleanup (e.g. `{ "super base": "Supabase" }`).
 - `provider.language: "auto"` (and empty) now explicitly auto-detects the
   spoken language across all providers, enabling code-switching.
 - AI smart cleanup (`cleanup.*`, disabled by default): run the raw transcript

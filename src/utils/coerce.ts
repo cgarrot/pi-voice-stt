@@ -32,3 +32,11 @@ export const stringArrayFrom = (value: unknown, fallback: string[] = []): string
   const items = value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
   return items.length > 0 ? items : fallback;
 };
+
+export const stringMapFrom = (value: unknown, fallback: Record<string, string> = {}): Record<string, string> => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return fallback;
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([key, val]) => typeof val === "string" && key.trim().length > 0)
+    .map(([key, val]) => [key.trim(), val as string] as const);
+  return entries.length > 0 ? Object.fromEntries(entries) : fallback;
+};

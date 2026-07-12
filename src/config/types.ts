@@ -86,6 +86,11 @@ export type OutputConfig = {
    * the prompt. Mirrors the Enter-while-recording behavior.
    */
   submitOnStop: boolean;
+  /**
+   * Literal dictionary applied to the raw transcript (before cleanup), e.g.
+   * { "super base": "Supabase" }. Case-insensitive, word-boundary aware.
+   */
+  replacements: Record<string, string>;
 };
 
 /**

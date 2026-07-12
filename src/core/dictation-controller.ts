@@ -4,6 +4,7 @@ import type { PluginConfig } from "../config/types";
 import { assertProviderReady } from "../providers/readiness";
 import type { Strings } from "../i18n/strings";
 import type { CleanupClient } from "../cleanup/types";
+import { applyReplacements } from "./replacements";
 import { formatTranscriptForPrompt } from "./output";
 
 export type DictationMode = "idle" | "recording" | "processing" | "polishing";
@@ -87,7 +88,7 @@ export const createDictationController = (options: DictationControllerOptions) =
       const result = await provider.transcribe({ audioPath, language: config.provider.language, signal: controller.signal });
       if (cancelRequested || disposed) return;
 
-      let text = result.text;
+      let text = applyReplacements(result.text, config.output.replacements);
       const cleanup = options.createCleanup(config);
       if (cleanup && text.trim()) {
         setMode("polishing", ctx);

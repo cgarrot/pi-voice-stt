@@ -24,7 +24,7 @@ import type {
   ProviderConfig,
 } from "./types";
 import { resolveApiKey } from "../secrets/resolve-api-key";
-import { booleanFrom, objectFrom, positiveIntegerFrom, stringArrayFrom, textFrom } from "../utils/coerce";
+import { booleanFrom, objectFrom, positiveIntegerFrom, stringArrayFrom, stringMapFrom, textFrom } from "../utils/coerce";
 import { resolvePath } from "../utils/path";
 import { formatError } from "../utils/text";
 
@@ -184,6 +184,7 @@ const outputFrom = (merged: Record<string, unknown>) => {
   return {
     appendTrailingSpace: booleanFrom(output.appendTrailingSpace ?? merged.appendTrailingSpace, defaultOutputConfig.appendTrailingSpace),
     submitOnStop: booleanFrom(output.submitOnStop ?? merged.submitOnStop, defaultOutputConfig.submitOnStop),
+    replacements: stringMapFrom(output.replacements ?? merged.replacements, defaultOutputConfig.replacements),
   };
 };
 
