@@ -79,6 +79,20 @@ or a top-level `keybind` in the config file. Environment wins at startup.
 
 > Note: the keybinding is registered when the extension loads. After changing `PI_STT_KEYBIND` or `keybind`, restart Pi or run `/reload` from a Pi process launched with the new environment.
 
+### Output options
+
+```json
+{
+  "output": {
+    "appendTrailingSpace": true,
+    "submitOnStop": false
+  }
+}
+```
+
+- `appendTrailingSpace` (default `true`): append a space after the inserted transcript.
+- `submitOnStop` (default `false`): when `true`, stopping a recording with the `Ctrl+R` toggle also sends the transcript to chat (same as pressing `Enter` while recording) instead of only inserting it into the prompt. Hands-free dictation: `Ctrl+R` to start, `Ctrl+R` to stop-and-send, `Esc` to cancel.
+
 ### Mistral Voxtral
 
 ```json
@@ -246,7 +260,7 @@ The voice state is displayed inside the input area, right-aligned on the prompt 
 | Action | Behavior |
 | --- | --- |
 | `Ctrl+R` while idle | Start recording |
-| `Ctrl+R` while recording | Stop, transcribe, insert transcript into the prompt |
+| `Ctrl+R` while recording | Stop, transcribe, insert transcript into the prompt (or send it directly when `output.submitOnStop` is `true`) |
 | `Enter` while recording | Stop, transcribe, insert transcript, send prompt to chat |
 | `Esc` while recording/processing | Cancel recording or transcription |
 | `/stt status` | Show current mode and config source |

@@ -80,6 +80,12 @@ export type ProviderConfig =
 
 export type OutputConfig = {
   appendTrailingSpace: boolean;
+  /**
+   * When true, stopping a recording with the toggle shortcut (Ctrl+R) also
+   * sends the transcript straight to chat instead of only inserting it into
+   * the prompt. Mirrors the Enter-while-recording behavior.
+   */
+  submitOnStop: boolean;
 };
 
 export type PluginConfig = {

@@ -181,6 +181,7 @@ const outputFrom = (merged: Record<string, unknown>) => {
   const output = objectFrom(merged.output);
   return {
     appendTrailingSpace: booleanFrom(output.appendTrailingSpace ?? merged.appendTrailingSpace, defaultOutputConfig.appendTrailingSpace),
+    submitOnStop: booleanFrom(output.submitOnStop ?? merged.submitOnStop, defaultOutputConfig.submitOnStop),
   };
 };
 

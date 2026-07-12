@@ -100,8 +100,21 @@ class VoiceEditorWrapper implements EditorComponent {
     (this.base as EditorComponent & { focused?: boolean }).focused = value;
   }
 
+  // While recording/processing, tint the whole prompt border so the state is
+  // impossible to miss (red = recording, orange = transcribing). Idle restores
+  // whatever border color pi set on the wrapper.
+  private applyModeBorder(): void {
+    const mode = this.options.getMode();
+    const theme = this.options.ctx.ui.theme;
+    if (mode === "recording") this.base.borderColor = (str: string) => theme.fg("error", str);
+    else if (mode === "processing") this.base.borderColor = (str: string) => theme.fg("warning", str);
+    else if (this.borderColor) this.base.borderColor = this.borderColor;
+    else delete (this.base as EditorComponent & { borderColor?: (str: string) => string }).borderColor;
+  }
+
   render(width: number): string[] {
     this.syncBase();
+    this.applyModeBorder();
     const lines = this.base.render(width);
     if (lines.length === 0) return lines;
 
@@ -174,7 +187,6 @@ class VoiceEditorWrapper implements EditorComponent {
   }
 }
 
-const RECORDING_PULSES = ["●", "●", "●", "·"];
 const PROCESSING_FRAMES = ["•  ", " • ", "  •", " • "];
 
 export const createInputIndicator = (keybind: string) => {
@@ -218,13 +230,14 @@ export const createInputIndicator = (keybind: string) => {
     },
     renderLabel(theme: Theme): string {
       if (mode === "recording") {
-        const pulse = RECORDING_PULSES[tick % RECORDING_PULSES.length] ?? "●";
-        return `${theme.fg("accent", pulse)} ${theme.fg("muted", "recording")} ${theme.fg("dim", "· enter send · esc cancel")}`;
+        // Clear on/off blink in red so the recording state is obvious.
+        const dot = tick % 2 === 0 ? "●" : "○";
+        return `${theme.fg("error", dot)} ${theme.fg("error", "recording")} ${theme.fg("dim", "· enter send · esc cancel")}`;
       }
 
       if (mode === "processing") {
         const frame = PROCESSING_FRAMES[tick % PROCESSING_FRAMES.length] ?? "…";
-        return `${theme.fg("accent", frame)} ${theme.fg("muted", "transcribing")} ${theme.fg("dim", "· esc cancel")}`;
+        return `${theme.fg("warning", frame)} ${theme.fg("warning", "transcribing")} ${theme.fg("dim", "· esc cancel")}`;
       }
 
       return `${theme.fg("dim", "voice")} ${theme.fg("accent", keybind)}`;

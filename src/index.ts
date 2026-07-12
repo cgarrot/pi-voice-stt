@@ -122,7 +122,21 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
       renderLabel: (theme) => inputIndicator.renderLabel(theme),
       attachTui: (tui) => inputIndicator.attach(tui),
       onToggle: (handlerCtx) => {
-        void controller.toggle(handlerCtx).catch((error: unknown) => reportError(handlerCtx, error));
+        void (async () => {
+          // Idle -> start recording. While recording/processing -> stop. The
+          // stop path honors output.submitOnStop: when enabled, Ctrl+R also
+          // sends the transcript to chat (like Enter), instead of only
+          // inserting it into the prompt.
+          if (controller.getMode() === "idle") {
+            await controller.toggle(handlerCtx);
+            return;
+          }
+          const submitOnStop = await getConfig()
+            .then((config) => config.output.submitOnStop)
+            .catch(() => false);
+          if (submitOnStop) await controller.stopAndSubmit(handlerCtx);
+          else await controller.toggle(handlerCtx);
+        })().catch((error: unknown) => reportError(handlerCtx, error));
       },
       onCancel: (handlerCtx) => {
         void controller.cancel(handlerCtx).catch((error: unknown) => reportError(handlerCtx, error));

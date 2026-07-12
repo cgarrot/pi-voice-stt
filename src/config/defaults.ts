@@ -105,4 +105,5 @@ export const defaultAssemblyAiProviderConfig = {
 
 export const defaultOutputConfig = {
   appendTrailingSpace: true,
+  submitOnStop: false,
 } satisfies OutputConfig;
