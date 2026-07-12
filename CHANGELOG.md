@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-13
+
 ### Added
 
+- Optional Mac microphone bridge for VPS usage: when Pi runs on a VPS over SSH,
+  `capture.type: "bridge"` delegates recording to a small local Mac daemon via a
+  reverse SSH tunnel (loopback-only, bearer-token auth). Includes a generic
+  one-command installer, a native macOS capture app, and a full setup guide in
+  `docs/macos-bridge.md`. The default `ffmpeg` recorder is unchanged.
 - Voice commands: end a dictation with a keyword to trigger an action
   (`commands.*`, disabled by default). Built-in actions `send`, `clear` and
   `newline`, with configurable, localizable keywords.
@@ -31,4 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Localization layer (`src/i18n/`) with a `locale` setting. Runtime labels and
   toasts default to English and can be switched (built-in `en` and `fr` packs).
 
-[Unreleased]: https://github.com/cgarrot/pi-voice-stt/compare/main...HEAD
+### Fixed
+
+- "Recording is too small" now explains the likely cause (an empty PulseAudio
+  default source on Linux while ALSA works) and points to `capture.inputFormat`/
+  `capture.input`, device listing (`pactl`/`arecord -L`), and the ALSA fallback.
+  The README gains a dedicated capture-troubleshooting subsection. (#4)
+
+[Unreleased]: https://github.com/cgarrot/pi-voice-stt/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/cgarrot/pi-voice-stt/releases/tag/v0.4.0
