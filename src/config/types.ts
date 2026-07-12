@@ -121,4 +121,16 @@ export type PluginConfig = {
   provider: ProviderConfig;
   output: OutputConfig;
   cleanup: CleanupConfig;
+  commands: VoiceCommandsConfig;
+};
+
+/**
+ * Spoken keywords detected at the end of a transcript. Disabled by default.
+ * Keys map a command to the list of phrases that trigger it.
+ */
+export type VoiceCommandsConfig = {
+  enabled: boolean;
+  send: string[];
+  clear: string[];
+  newline: string[];
 };

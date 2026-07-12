@@ -5,6 +5,7 @@ import { assertProviderReady } from "../providers/readiness";
 import type { Strings } from "../i18n/strings";
 import type { CleanupClient } from "../cleanup/types";
 import { applyReplacements } from "./replacements";
+import { parseVoiceCommand } from "./voice-commands";
 import { formatTranscriptForPrompt } from "./output";
 
 export type DictationMode = "idle" | "recording" | "processing" | "polishing";
@@ -89,6 +90,12 @@ export const createDictationController = (options: DictationControllerOptions) =
       if (cancelRequested || disposed) return;
 
       let text = applyReplacements(result.text, config.output.replacements);
+      const voice = parseVoiceCommand(text, config.commands);
+      if (voice.command === "clear") {
+        notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.cleared, variant: "info" });
+        return;
+      }
+      text = voice.text;
       const cleanup = options.createCleanup(config);
       if (cleanup && text.trim()) {
         setMode("polishing", ctx);
@@ -110,14 +117,16 @@ export const createDictationController = (options: DictationControllerOptions) =
       }
 
       await appendPrompt(ctx, formatTranscriptForPrompt(text, config.output));
-      if (stopOptions.submitAfterAppend) {
+      if (voice.command === "newline") await appendPrompt(ctx, "\n");
+      const shouldSubmit = stopOptions.submitAfterAppend || voice.command === "send";
+      if (shouldSubmit) {
         await waitForPromptAppendFlush();
         await submitPrompt(ctx);
       }
       if (!cancelRequested) {
         notify(ctx, {
           title: "Pi Voice STT",
-          message: stopOptions.submitAfterAppend ? options.strings.toast.sent : options.strings.toast.inserted,
+          message: shouldSubmit ? options.strings.toast.sent : options.strings.toast.inserted,
           variant: "success",
         });
       }

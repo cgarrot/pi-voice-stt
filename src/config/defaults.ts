@@ -8,6 +8,7 @@ import type {
   MistralProviderConfig,
   OpenAiCompatibleProviderConfig,
   OutputConfig,
+  VoiceCommandsConfig,
 } from "./types";
 
 const platformCaptureDefaults = (): Pick<CaptureConfig, "inputFormat" | "input"> => {
@@ -134,3 +135,10 @@ export const defaultCleanupConfig = {
   keychainService: "",
   keychainAccount: "",
 } satisfies CleanupConfig;
+
+export const defaultVoiceCommandsConfig = {
+  enabled: false,
+  send: ["send", "send it"],
+  clear: ["scratch that", "clear that", "delete that"],
+  newline: ["new line"],
+} satisfies VoiceCommandsConfig;

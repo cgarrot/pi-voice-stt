@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Voice commands: end a dictation with a keyword to trigger an action
+  (`commands.*`, disabled by default). Built-in actions `send`, `clear` and
+  `newline`, with configurable, localizable keywords.
 - Modes: named presets (`mode` / `modes`, `/stt mode <name>`) that deep-merge
   over the base config. Built-in `default` and `raw` (skips cleanup).
 - `output.replacements`: a literal, case-insensitive dictionary applied to the

@@ -131,6 +131,27 @@ Modes are named presets that override any part of the configuration. Built-in mo
 
 A user mode overrides the built-in of the same name. `/stt mode` with no argument prints the active mode and the available list. The mode applies on top of the base config, so it can change the provider, cleanup, language or replacements.
 
+### Voice commands
+
+Optionally trigger an action by ending your dictation with a keyword. Disabled by default; keywords are configurable (English by default, override for any language).
+
+```json
+{
+  "commands": {
+    "enabled": true,
+    "send": ["send", "send it"],
+    "clear": ["scratch that", "delete that"],
+    "newline": ["new line"]
+  }
+}
+```
+
+- `send`: strip the keyword and send the prompt to chat (even when `submitOnStop` is off).
+- `clear`: discard the current dictation without inserting anything.
+- `newline`: insert the text followed by a line break.
+
+The keyword is only detected at the very end of the transcript, ignoring trailing punctuation. Voice commands are parsed before the AI cleanup pass.
+
 ### Smart cleanup (AI)
 
 Optionally run the raw transcript through an LLM before it is inserted, to fix punctuation, capitalization, remove filler words and spell project-specific terms correctly. Disabled by default. Because Pi exposes no one-shot inference API, cleanup calls its own OpenAI-compatible chat endpoint (works with OpenAI, Groq, Mistral or a local server), reusing the same secret resolution as the STT providers.

@@ -9,6 +9,7 @@ import {
   defaultMistralProviderConfig,
   defaultOpenAiCompatibleProviderConfig,
   defaultOutputConfig,
+  defaultVoiceCommandsConfig,
 } from "./defaults";
 import { secureEndpointFrom } from "./endpoint";
 import type {
@@ -22,6 +23,7 @@ import type {
   OpenAiCompatibleProviderConfig,
   PluginConfig,
   ProviderConfig,
+  VoiceCommandsConfig,
 } from "./types";
 import { resolveApiKey } from "../secrets/resolve-api-key";
 import { booleanFrom, objectFrom, positiveIntegerFrom, stringArrayFrom, stringMapFrom, textFrom } from "../utils/coerce";
@@ -211,6 +213,16 @@ const cleanupFrom = async (merged: Record<string, unknown>): Promise<CleanupConf
   };
 };
 
+const commandsFrom = (merged: Record<string, unknown>): VoiceCommandsConfig => {
+  const commands = objectFrom(merged.commands);
+  return {
+    enabled: booleanFrom(commands.enabled, defaultVoiceCommandsConfig.enabled),
+    send: stringArrayFrom(commands.send, defaultVoiceCommandsConfig.send),
+    clear: stringArrayFrom(commands.clear, defaultVoiceCommandsConfig.clear),
+    newline: stringArrayFrom(commands.newline, defaultVoiceCommandsConfig.newline),
+  };
+};
+
 export const loadConfig = async (options: Record<string, unknown> = {}): Promise<PluginConfig> => {
   const merged = await mergedInput(options);
   return {
@@ -218,5 +230,6 @@ export const loadConfig = async (options: Record<string, unknown> = {}): Promise
     provider: await providerFrom(merged),
     output: outputFrom(merged),
     cleanup: await cleanupFrom(merged),
+    commands: commandsFrom(merged),
   };
 };

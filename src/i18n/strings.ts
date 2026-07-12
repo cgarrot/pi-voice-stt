@@ -28,6 +28,7 @@ export type Strings = {
     recordingCancelled: string;
     transcriptionCancelled: string;
     cleanupFailed: string;
+    cleared: string;
   };
 };
 
@@ -53,6 +54,7 @@ const en: Strings = {
     recordingCancelled: "Recording cancelled.",
     transcriptionCancelled: "Transcription cancelled.",
     cleanupFailed: "Cleanup failed; using the raw transcript.",
+    cleared: "Transcript discarded.",
   },
 };
 
@@ -76,6 +78,7 @@ const fr: Strings = {
     recordingCancelled: "Enregistrement annulé.",
     transcriptionCancelled: "Transcription annulée.",
     cleanupFailed: "Échec du nettoyage ; transcription brute utilisée.",
+    cleared: "Transcription ignorée.",
   },
 };
 
