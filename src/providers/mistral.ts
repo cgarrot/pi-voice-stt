@@ -1,5 +1,6 @@
 import type { MistralProviderConfig } from "../config/types";
 import { objectFrom, textFrom } from "../utils/coerce";
+import { normalizeLanguage } from "./helpers";
 import { postMultipartTranscription } from "./multipart";
 import type { SttProvider } from "./types";
 
@@ -12,7 +13,7 @@ export const createMistralProvider = (config: MistralProviderConfig): SttProvide
       authHeader: "bearer",
       model: config.model,
       audioPath: input.audioPath,
-      language: input.language ?? config.language,
+      language: normalizeLanguage(input.language ?? config.language),
       signal: input.signal,
       missingKeyMessage: "Missing Mistral API key. Set MISTRAL_API_KEY or configure provider.apiKeyEnv/keychainService/keychainAccount.",
     });

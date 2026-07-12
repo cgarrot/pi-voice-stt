@@ -11,6 +11,18 @@ export const audioBytesFromPath = async (audioPath: string): Promise<Uint8Array>
   return new Uint8Array(audio);
 };
 
+/**
+ * Normalize a configured language into a value safe to send to a provider.
+ * Empty strings and the special value "auto" (case-insensitive) become
+ * `undefined` so the provider auto-detects the spoken language. Any other
+ * value is trimmed and returned as-is.
+ */
+export const normalizeLanguage = (language?: string): string | undefined => {
+  const trimmed = (language ?? "").trim();
+  if (!trimmed || trimmed.toLowerCase() === "auto") return undefined;
+  return trimmed;
+};
+
 export const fetchJson = async (input: RequestInfo | URL, init: RequestInit, errorPrefix: string): Promise<unknown> => {
   const response = await fetch(input, init).catch((error: unknown) => {
     if (error instanceof DOMException && error.name === "AbortError") {

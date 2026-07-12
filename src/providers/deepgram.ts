@@ -1,5 +1,5 @@
 import type { DeepgramProviderConfig } from "../config/types";
-import { arrayAt, audioBlobFromPath, fetchJson, objectAt, textAt } from "./helpers";
+import { arrayAt, audioBlobFromPath, fetchJson, normalizeLanguage, objectAt, textAt } from "./helpers";
 import type { SttProvider } from "./types";
 
 const transcriptFromDeepgram = (payload: unknown): string => {
@@ -12,7 +12,8 @@ const transcriptFromDeepgram = (payload: unknown): string => {
 const endpointWithQuery = (config: DeepgramProviderConfig, language?: string): string => {
   const url = new URL(config.endpoint);
   if (config.model) url.searchParams.set("model", config.model);
-  if (language || config.language) url.searchParams.set("language", language || config.language);
+  const lang = normalizeLanguage(language ?? config.language);
+  if (lang) url.searchParams.set("language", lang);
   if (config.smartFormat) url.searchParams.set("smart_format", "true");
   return url.toString();
 };

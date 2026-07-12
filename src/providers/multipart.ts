@@ -7,7 +7,7 @@ export type MultipartTranscriptionRequest = {
   authHeader: "bearer" | "none";
   model: string;
   audioPath: string;
-  language?: string;
+  language?: string | undefined;
   signal: AbortSignal;
   fields?: Record<string, string>;
   missingKeyMessage?: string;

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `provider.language: "auto"` (and empty) now explicitly auto-detects the
+  spoken language across all providers, enabling code-switching.
 - AI smart cleanup (`cleanup.*`, disabled by default): run the raw transcript
   through an OpenAI-compatible chat endpoint to fix punctuation, capitalization,
   remove filler words and spell project-specific terms correctly. Supports a

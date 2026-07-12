@@ -1,6 +1,7 @@
 import { endpointRequiresAuth } from "../config/endpoint";
 import type { OpenAiCompatibleProviderConfig } from "../config/types";
 import { objectFrom, textFrom } from "../utils/coerce";
+import { normalizeLanguage } from "./helpers";
 import { postMultipartTranscription } from "./multipart";
 import type { SttProvider } from "./types";
 
@@ -14,7 +15,7 @@ export const createOpenAiCompatibleProvider = (config: OpenAiCompatibleProviderC
       authHeader: needsAuth ? "bearer" : "none",
       model: config.model,
       audioPath: input.audioPath,
-      language: input.language ?? config.language,
+      language: normalizeLanguage(input.language ?? config.language),
       signal: input.signal,
       fields: { response_format: config.responseFormat },
       missingKeyMessage: "Missing API key for OpenAI-compatible STT endpoint. Set provider.apiKeyEnv or use a localhost endpoint.",

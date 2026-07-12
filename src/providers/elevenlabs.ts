@@ -1,5 +1,5 @@
 import type { ElevenLabsProviderConfig } from "../config/types";
-import { audioBlobFromPath, fetchJson, textAt } from "./helpers";
+import { audioBlobFromPath, fetchJson, normalizeLanguage, textAt } from "./helpers";
 import type { SttProvider } from "./types";
 
 export const createElevenLabsProvider = (config: ElevenLabsProviderConfig): SttProvider => ({
@@ -8,7 +8,7 @@ export const createElevenLabsProvider = (config: ElevenLabsProviderConfig): SttP
     const form = new FormData();
     form.append("model_id", config.model);
     form.append("file", await audioBlobFromPath(input.audioPath), "recording.wav");
-    const language = input.language ?? config.language;
+    const language = normalizeLanguage(input.language ?? config.language);
     if (language) form.append("language_code", language);
 
     const payload = await fetchJson(

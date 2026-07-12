@@ -1,5 +1,5 @@
 import type { GladiaProviderConfig } from "../config/types";
-import { audioBlobFromPath, fetchJson, objectAt, sleep, textAt } from "./helpers";
+import { audioBlobFromPath, fetchJson, normalizeLanguage, objectAt, sleep, textAt } from "./helpers";
 import type { SttProvider } from "./types";
 
 const gladiaHeaders = (apiKey: string): Record<string, string> => ({
@@ -77,7 +77,7 @@ export const createGladiaProvider = (config: GladiaProviderConfig): SttProvider 
     const audioUrl = textAt(uploadPayload, "audio_url");
     if (!audioUrl) throw new Error("Gladia upload response did not include audio_url.");
 
-    const language = input.language ?? config.language;
+    const language = normalizeLanguage(input.language ?? config.language);
     const body: Record<string, unknown> = { audio_url: audioUrl };
     if (language) body.language_config = { languages: [language], code_switching: false };
 

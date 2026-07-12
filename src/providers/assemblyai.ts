@@ -1,5 +1,5 @@
 import type { AssemblyAiProviderConfig } from "../config/types";
-import { audioBlobFromPath, fetchJson, objectAt, sleep, textAt } from "./helpers";
+import { audioBlobFromPath, fetchJson, normalizeLanguage, objectAt, sleep, textAt } from "./helpers";
 import type { SttProvider } from "./types";
 
 const authHeaders = (apiKey: string): Record<string, string> => ({
@@ -57,7 +57,7 @@ export const createAssemblyAiProvider = (config: AssemblyAiProviderConfig): SttP
     const audioUrl = textAt(uploadPayload, "upload_url");
     if (!audioUrl) throw new Error("AssemblyAI upload response did not include upload_url.");
 
-    const language = input.language ?? config.language;
+    const language = normalizeLanguage(input.language ?? config.language);
     const body: Record<string, unknown> = {
       audio_url: audioUrl,
       speech_model: config.model,

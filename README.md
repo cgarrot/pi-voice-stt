@@ -133,6 +133,10 @@ Optionally run the raw transcript through an LLM before it is inserted, to fix p
 
 If the cleanup call fails or times out, the raw transcript is used instead — dictation is never blocked. The indicator shows a distinct `polishing` state during the pass.
 
+### Language detection
+
+Set `provider.language` to a specific code (e.g. `"en"`, `"fr"`) to force a language, or to `"auto"` (or leave it empty) to let the provider detect the spoken language automatically — useful for code-switching (e.g. French with English technical terms). `"auto"` is treated as "no language hint" and is supported by every provider.
+
 ### Mistral Voxtral
 
 ```json
