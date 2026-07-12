@@ -3,9 +3,10 @@ import type { AudioRecorder, RecordingHandle } from "../audio/types";
 import type { PluginConfig } from "../config/types";
 import { assertProviderReady } from "../providers/readiness";
 import type { Strings } from "../i18n/strings";
+import type { CleanupClient } from "../cleanup/types";
 import { formatTranscriptForPrompt } from "./output";
 
-export type DictationMode = "idle" | "recording" | "processing";
+export type DictationMode = "idle" | "recording" | "processing" | "polishing";
 
 export type DictationToast = {
   variant?: "info" | "success" | "warning" | "error";
@@ -20,6 +21,7 @@ export type DictationControllerOptions = {
   loadConfig(): Promise<PluginConfig>;
   createRecorder(config: PluginConfig): AudioRecorder;
   createProvider(config: PluginConfig): { transcribe(input: { audioPath: string; language?: string; signal: AbortSignal }): Promise<{ text: string }> };
+  createCleanup(config: PluginConfig): CleanupClient | null;
   appendPrompt(ctx: ExtensionContext, text: string): Promise<unknown>;
   submitPrompt(ctx: ExtensionContext): Promise<unknown>;
   notify(ctx: ExtensionContext | undefined, toast: DictationToast): void;
@@ -84,7 +86,29 @@ export const createDictationController = (options: DictationControllerOptions) =
       if (disposed) return;
       const result = await provider.transcribe({ audioPath, language: config.provider.language, signal: controller.signal });
       if (cancelRequested || disposed) return;
-      await appendPrompt(ctx, formatTranscriptForPrompt(result.text, config.output));
+
+      let text = result.text;
+      const cleanup = options.createCleanup(config);
+      if (cleanup && text.trim()) {
+        setMode("polishing", ctx);
+        const cleanupController = new AbortController();
+        transcriptionController = cleanupController;
+        const cleanupTimeout = setTimeout(() => cleanupController.abort(), config.cleanup.timeoutSeconds * 1000);
+        try {
+          const cleaned = await cleanup.clean({ text, signal: cleanupController.signal });
+          if (!cancelRequested && !disposed && cleaned.trim()) text = cleaned;
+        } catch {
+          if (!cancelRequested && !disposed) {
+            notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.cleanupFailed, variant: "warning" });
+          }
+        } finally {
+          clearTimeout(cleanupTimeout);
+          if (transcriptionController === cleanupController) transcriptionController = undefined;
+        }
+        if (cancelRequested || disposed) return;
+      }
+
+      await appendPrompt(ctx, formatTranscriptForPrompt(text, config.output));
       if (stopOptions.submitAfterAppend) {
         await waitForPromptAppendFlush();
         await submitPrompt(ctx);

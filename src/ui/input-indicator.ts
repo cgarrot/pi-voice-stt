@@ -109,6 +109,7 @@ class VoiceEditorWrapper implements EditorComponent {
     const theme = this.options.ctx.ui.theme;
     if (mode === "recording") this.base.borderColor = (str: string) => theme.fg("error", str);
     else if (mode === "processing") this.base.borderColor = (str: string) => theme.fg("warning", str);
+    else if (mode === "polishing") this.base.borderColor = (str: string) => theme.fg("accent", str);
     else if (this.borderColor) this.base.borderColor = this.borderColor;
     else delete (this.base as EditorComponent & { borderColor?: (str: string) => string }).borderColor;
   }
@@ -239,6 +240,11 @@ export const createInputIndicator = (keybind: string, strings: Strings) => {
       if (mode === "processing") {
         const frame = PROCESSING_FRAMES[tick % PROCESSING_FRAMES.length] ?? "…";
         return `${theme.fg("warning", frame)} ${theme.fg("warning", strings.indicator.transcribing)} ${theme.fg("dim", strings.indicator.transcribingHint)}`;
+      }
+
+      if (mode === "polishing") {
+        const frame = PROCESSING_FRAMES[tick % PROCESSING_FRAMES.length] ?? "…";
+        return `${theme.fg("accent", frame)} ${theme.fg("accent", strings.indicator.polishing)} ${theme.fg("dim", strings.indicator.polishingHint)}`;
       }
 
       return `${theme.fg("dim", strings.indicator.idle)} ${theme.fg("accent", keybind)}`;

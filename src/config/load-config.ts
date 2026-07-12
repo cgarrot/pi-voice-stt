@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import {
   defaultAssemblyAiProviderConfig,
   defaultCaptureConfig,
+  defaultCleanupConfig,
   defaultDeepgramProviderConfig,
   defaultElevenLabsProviderConfig,
   defaultGladiaProviderConfig,
@@ -13,6 +14,7 @@ import { secureEndpointFrom } from "./endpoint";
 import type {
   AssemblyAiProviderConfig,
   CaptureConfig,
+  CleanupConfig,
   DeepgramProviderConfig,
   ElevenLabsProviderConfig,
   GladiaProviderConfig,
@@ -22,7 +24,7 @@ import type {
   ProviderConfig,
 } from "./types";
 import { resolveApiKey } from "../secrets/resolve-api-key";
-import { booleanFrom, objectFrom, positiveIntegerFrom, textFrom } from "../utils/coerce";
+import { booleanFrom, objectFrom, positiveIntegerFrom, stringArrayFrom, textFrom } from "../utils/coerce";
 import { resolvePath } from "../utils/path";
 import { formatError } from "../utils/text";
 
@@ -185,11 +187,31 @@ const outputFrom = (merged: Record<string, unknown>) => {
   };
 };
 
+const cleanupFrom = async (merged: Record<string, unknown>): Promise<CleanupConfig> => {
+  const cleanup = objectFrom(merged.cleanup);
+  return {
+    enabled: booleanFrom(cleanup.enabled, defaultCleanupConfig.enabled),
+    endpoint: secureEndpointFrom(cleanup.endpoint, defaultCleanupConfig.endpoint),
+    model: textFrom(cleanup.model, defaultCleanupConfig.model),
+    language: textFrom(cleanup.language, defaultCleanupConfig.language),
+    prompt: textFrom(cleanup.prompt, defaultCleanupConfig.prompt),
+    projectTerms: stringArrayFrom(cleanup.projectTerms, defaultCleanupConfig.projectTerms),
+    useRepoContext: booleanFrom(cleanup.useRepoContext, defaultCleanupConfig.useRepoContext),
+    maxTokens: positiveIntegerFrom(cleanup.maxTokens, defaultCleanupConfig.maxTokens),
+    timeoutSeconds: positiveIntegerFrom(cleanup.timeoutSeconds, defaultCleanupConfig.timeoutSeconds),
+    apiKey: await resolveApiKey(cleanup, defaultCleanupConfig.apiKeyEnv),
+    apiKeyEnv: textFrom(cleanup.apiKeyEnv, defaultCleanupConfig.apiKeyEnv),
+    keychainService: textFrom(cleanup.keychainService),
+    keychainAccount: textFrom(cleanup.keychainAccount),
+  };
+};
+
 export const loadConfig = async (options: Record<string, unknown> = {}): Promise<PluginConfig> => {
   const merged = await mergedInput(options);
   return {
     capture: captureFrom(merged),
     provider: await providerFrom(merged),
     output: outputFrom(merged),
+    cleanup: await cleanupFrom(merged),
   };
 };

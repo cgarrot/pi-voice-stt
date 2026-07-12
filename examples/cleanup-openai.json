@@ -1,0 +1,18 @@
+{
+  "provider": {
+    "type": "openai-compatible",
+    "endpoint": "http://localhost:10301/v1/audio/transcriptions",
+    "model": "whisper-1",
+    "apiKeyEnv": "",
+    "language": "auto"
+  },
+  "cleanup": {
+    "enabled": true,
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4o-mini",
+    "apiKeyEnv": "OPENAI_API_KEY",
+    "language": "auto",
+    "useRepoContext": true,
+    "projectTerms": ["Supabase", "HyperFrames"]
+  }
+}

@@ -88,8 +88,32 @@ export type OutputConfig = {
   submitOnStop: boolean;
 };
 
+/**
+ * Optional AI cleanup pass applied to the raw transcript before it is inserted
+ * into the prompt. Disabled by default. Because Pi exposes no one-shot
+ * inference API, cleanup calls its own configurable OpenAI-compatible chat
+ * endpoint, reusing the same secret-resolution infrastructure as the STT
+ * providers.
+ */
+export type CleanupConfig = SecretConfig & {
+  enabled: boolean;
+  endpoint: string;
+  model: string;
+  /** Target language for the cleaned text: "auto" keeps the spoken language. */
+  language: string;
+  /** Base system prompt; language, glossary and repo context are appended. */
+  prompt: string;
+  /** Glossary of project-specific terms the model should spell correctly. */
+  projectTerms: string[];
+  /** When true, include light git context (current branch) in the prompt. */
+  useRepoContext: boolean;
+  maxTokens: number;
+  timeoutSeconds: number;
+};
+
 export type PluginConfig = {
   capture: CaptureConfig;
   provider: ProviderConfig;
   output: OutputConfig;
+  cleanup: CleanupConfig;
 };

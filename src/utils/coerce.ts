@@ -26,3 +26,9 @@ export const booleanFrom = (value: unknown, fallback: boolean): boolean => {
   if (typeof value !== "boolean") return fallback;
   return value;
 };
+
+export const stringArrayFrom = (value: unknown, fallback: string[] = []): string[] => {
+  if (!Array.isArray(value)) return fallback;
+  const items = value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+  return items.length > 0 ? items : fallback;
+};

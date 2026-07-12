@@ -4,6 +4,7 @@ import { loadConfig } from "./config/load-config";
 import { resolveStartupOptions } from "./config/startup";
 import { createDictationController, type DictationToast } from "./core/dictation-controller";
 import { createProvider } from "./providers/factory";
+import { createCleanup } from "./cleanup/factory";
 import { assertProviderReady } from "./providers/readiness";
 import { createInputIndicator, createVoiceEditorFactory } from "./ui/input-indicator";
 import { resolveStrings } from "./i18n/strings";
@@ -39,6 +40,7 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
     loadConfig: getConfig,
     createRecorder: (config) => createFfmpegRecorder(config.capture),
     createProvider: (config) => createProvider(config.provider),
+    createCleanup: (config) => createCleanup(config.cleanup),
     appendPrompt: async (ctx, text) => {
       const current = ctx.ui.getEditorText();
       ctx.ui.setEditorText(`${current}${text}`);

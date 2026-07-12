@@ -105,6 +105,34 @@ Runtime labels and toasts default to English. Switch them with the top-level `lo
 
 Like the keybinding, the locale is resolved when the extension loads — restart Pi or run `/reload` after changing it. A ready-to-copy French config is provided in [`examples/stt.fr.json`](examples/stt.fr.json). The product name is never localized.
 
+### Smart cleanup (AI)
+
+Optionally run the raw transcript through an LLM before it is inserted, to fix punctuation, capitalization, remove filler words and spell project-specific terms correctly. Disabled by default. Because Pi exposes no one-shot inference API, cleanup calls its own OpenAI-compatible chat endpoint (works with OpenAI, Groq, Mistral or a local server), reusing the same secret resolution as the STT providers.
+
+```json
+{
+  "cleanup": {
+    "enabled": true,
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4o-mini",
+    "apiKeyEnv": "OPENAI_API_KEY",
+    "language": "auto",
+    "useRepoContext": true,
+    "projectTerms": ["Supabase", "HyperFrames"]
+  }
+}
+```
+
+- `enabled` (default `false`): turn the cleanup pass on.
+- `endpoint` / `model` / `apiKeyEnv` / `keychainService` / `keychainAccount`: same secret handling as STT providers; HTTPS required unless the endpoint is localhost.
+- `language` (default `"auto"`): `"auto"` keeps the spoken language; set e.g. `"fr"` to normalize the output.
+- `prompt`: override the base system prompt.
+- `projectTerms`: glossary of terms the model should spell correctly (e.g. `"super base"` → `Supabase`).
+- `useRepoContext` (default `false`): include the current git branch as context.
+- `maxTokens` (default `2000`), `timeoutSeconds` (default `30`).
+
+If the cleanup call fails or times out, the raw transcript is used instead — dictation is never blocked. The indicator shows a distinct `polishing` state during the pass.
+
 ### Mistral Voxtral
 
 ```json

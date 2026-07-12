@@ -14,6 +14,8 @@ export type Strings = {
     recordingHint: string;
     transcribing: string;
     transcribingHint: string;
+    polishing: string;
+    polishingHint: string;
   };
   /** Transient toast notifications. */
   toast: {
@@ -25,6 +27,7 @@ export type Strings = {
     stillProcessing: string;
     recordingCancelled: string;
     transcriptionCancelled: string;
+    cleanupFailed: string;
   };
 };
 
@@ -37,6 +40,8 @@ const en: Strings = {
     recordingHint: "· enter send · esc cancel",
     transcribing: "transcribing",
     transcribingHint: "· esc cancel",
+    polishing: "polishing",
+    polishingHint: "· esc cancel",
   },
   toast: {
     stopping: "Stopping recording and transcribing…",
@@ -47,6 +52,7 @@ const en: Strings = {
     stillProcessing: "Still processing the previous recording…",
     recordingCancelled: "Recording cancelled.",
     transcriptionCancelled: "Transcription cancelled.",
+    cleanupFailed: "Cleanup failed; using the raw transcript.",
   },
 };
 
@@ -57,6 +63,8 @@ const fr: Strings = {
     recordingHint: "· entrée envoie · esc annule",
     transcribing: "transcription",
     transcribingHint: "· esc annule",
+    polishing: "nettoyage",
+    polishingHint: "· esc annule",
   },
   toast: {
     stopping: "Arrêt de l'enregistrement et transcription…",
@@ -67,6 +75,7 @@ const fr: Strings = {
     stillProcessing: "Traitement du précédent enregistrement en cours…",
     recordingCancelled: "Enregistrement annulé.",
     transcriptionCancelled: "Transcription annulée.",
+    cleanupFailed: "Échec du nettoyage ; transcription brute utilisée.",
   },
 };
 

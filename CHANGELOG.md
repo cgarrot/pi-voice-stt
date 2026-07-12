@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- AI smart cleanup (`cleanup.*`, disabled by default): run the raw transcript
+  through an OpenAI-compatible chat endpoint to fix punctuation, capitalization,
+  remove filler words and spell project-specific terms correctly. Supports a
+  glossary (`projectTerms`), optional git-branch context (`useRepoContext`) and
+  a configurable target language. Falls back to the raw transcript on failure,
+  with a distinct `polishing` indicator state.
 - `output.submitOnStop` option: stopping a recording with the `Ctrl+R` toggle
   can now send the transcript straight to chat instead of only inserting it.
 - Clearer recording indicator: red blinking dot while recording, orange while
