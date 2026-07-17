@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-13
+
+### Fixed
+
+- Avoid a crash on pi 0.80.x where deleting the editor `borderColor` throws (the
+  property is non-configurable / proxy-trapped in newer pi-tui). The idle state
+  now clears the recording/processing tint via assignment instead of `delete`, so
+  the prompt border no longer stays red/orange after dictation. (#13)
+
 ## [0.4.0] - 2026-07-13
 
 ### Added
@@ -45,5 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `capture.input`, device listing (`pactl`/`arecord -L`), and the ALSA fallback.
   The README gains a dedicated capture-troubleshooting subsection. (#4)
 
-[Unreleased]: https://github.com/cgarrot/pi-voice-stt/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/cgarrot/pi-voice-stt/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/cgarrot/pi-voice-stt/releases/tag/v0.4.1
 [0.4.0]: https://github.com/cgarrot/pi-voice-stt/releases/tag/v0.4.0
