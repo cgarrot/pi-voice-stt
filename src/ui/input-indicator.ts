@@ -111,7 +111,7 @@ class VoiceEditorWrapper implements EditorComponent {
     else if (mode === "processing") this.base.borderColor = (str: string) => theme.fg("warning", str);
     else if (mode === "polishing") this.base.borderColor = (str: string) => theme.fg("accent", str);
     else if (this.borderColor) this.base.borderColor = this.borderColor;
-    else delete (this.base as EditorComponent & { borderColor?: (str: string) => string }).borderColor;
+    else (this.base as unknown as { borderColor: ((str: string) => string) | undefined }).borderColor = undefined;
   }
 
   render(width: number): string[] {
