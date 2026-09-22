@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Local audio file transcription via `/stt file <path>` and the `transcribe_audio`
+  agent tool, using the active profile, mode, replacements and optional cleanup.
+  Files retain their original format, filename and MIME type. No conversion or
+  automatic chunking is performed; provider size and duration limits still apply.
+
+### Changed
+
+- Microphone and file transcription share the STT/cleanup pipeline and existing
+  processing/cancellation state. Voice commands remain microphone-only.
+
 ## [0.7.0] - 2026-09-07
 
 ### Added

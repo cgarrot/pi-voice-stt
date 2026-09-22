@@ -2,7 +2,7 @@
 
 ![Pi Voice STT preview](https://raw.githubusercontent.com/cgarrot/pi-voice-stt/main/assets/preview.gif)
 
-Provider-agnostic speech-to-text dictation for the [Pi coding agent](https://github.com/earendil-works/pi-coding-agent) TUI.
+Provider-agnostic speech-to-text for the [Pi coding agent](https://github.com/earendil-works/pi-coding-agent), with interactive voice dictation and audio file transcription.
 
 Press `Ctrl+R` to record your microphone, press it again to transcribe and insert the transcript into the active prompt, press `Enter` while recording to transcribe and send it directly to chat, or press `Esc` to cancel recording/transcription.
 
@@ -11,6 +11,7 @@ This project is intentionally small and hackable: a Pi extension, local/bridge a
 ## Features
 
 - Pi TUI extension with `/stt` command and `Ctrl+R` shortcut.
+- Local audio file transcription with `/stt file <path>` and the `transcribe_audio` agent tool.
 - `Enter`-to-send and `Esc`-to-cancel while recording.
 - Pi-native animated input indicator, right-aligned in the prompt border (`voice ctrl+r`, `● recording`, `• transcribing`).
 - `ffmpeg` microphone capture to temporary WAV files.
@@ -26,8 +27,8 @@ This project is intentionally small and hackable: a Pi extension, local/bridge a
 
 - Pi `>= 0.75`.
 - Node.js `>= 20` when developing locally.
-- `ffmpeg` available in `PATH` or configured with `capture.ffmpegPath`.
-- Microphone permission for the terminal app running Pi, or for the Mac bridge daemon when using `capture.type: "bridge"`.
+- For microphone capture: `ffmpeg` available in `PATH` or configured with `capture.ffmpegPath` (or the Mac bridge).
+- For microphone capture: microphone permission for the terminal app running Pi, or for the Mac bridge daemon when using `capture.type: "bridge"`.
 - A transcription backend (Mistral, OpenAI/Groq, Deepgram, ElevenLabs, Gladia, AssemblyAI, or a local OpenAI-compatible server).
 
 ## Installation
@@ -61,6 +62,33 @@ You can also add the local path to Pi settings:
 ```bash
 pi install /absolute/path/to/pi-voice-stt
 ```
+
+## Audio file transcription
+
+Insert a local recording's transcript into the current prompt:
+
+```text
+/stt file ./meeting.m4a
+/stt file "./My recordings/meeting.wav"
+```
+
+The command appends to the editor using the existing output formatting and never sends the prompt automatically, even when `output.submitOnStop` is enabled. Spoken keywords such as `send`, `clear` and `new line` are treated as transcript content, not voice commands.
+
+An agent can use the `transcribe_audio` tool:
+
+```text
+Transcribe ./meeting.m4a and summarize the decisions and action items.
+```
+
+The tool accepts `{ "path": "./meeting.m4a" }` and returns the transcript as its main text, with `text`, `provider`, `model` and the resolved `path` in its result details. It does not change the editor or write a transcript file.
+
+Both entry points use the active profile and mode, including the provider, language, replacements and optional AI cleanup. Use `/stt mode raw` to skip cleanup. Relative paths resolve from the Pi session's working directory; absolute paths and a leading `@` are also accepted. Only readable local files are supported; URLs are not downloaded. Source files are never modified. File transcription does not require a microphone, `ffmpeg`, or the capture bridge.
+
+Supported file extensions: `.wav`, `.mp3`, `.m4a`, `.mp4`, `.aac`, `.flac`, `.ogg`, `.opus` and `.webm`. The original file is uploaded with its filename and matching MIME type, without conversion to WAV. Actual codec/container support depends on the selected provider, model and endpoint, especially for custom OpenAI-compatible servers. `.opus` is sent as an Ogg Opus container (`audio/ogg`). AssemblyAI retains its binary upload endpoint's `application/octet-stream` header.
+
+Audio files are currently sent as a single transcription request. Automatic chunking of long recordings is not implemented yet. Provider upload size and duration limits therefore still apply. A provider rejection includes the provider, file path, file size and the returned error; the extension does not silently retry with another format or provider. Gladia and AssemblyAI retain their existing upload, transcription-job and polling flow for that single file.
+
+The existing provider and cleanup timeouts apply. Cancel with `/stt cancel` or `Esc` in the interactive editor; tool cancellation also aborts the request. Failed or cancelled file transcription leaves the editor unchanged. Only one recording or transcription can run at a time.
 
 ## Configuration
 
@@ -500,6 +528,7 @@ The voice state is displayed inside the input area, right-aligned on the prompt 
 | `/stt start` | Start recording |
 | `/stt stop` | Stop and insert transcript |
 | `/stt send` | Stop and send to chat |
+| `/stt file <path>` | Transcribe a local audio file and append it to the editor |
 | `/stt cancel` | Cancel active recording/transcription |
 | `/stt mode [name]` | Show or switch the active preset (`default`, `raw`, or your own) |
 
