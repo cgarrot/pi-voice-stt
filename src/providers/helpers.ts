@@ -1,9 +1,14 @@
 import { readFile } from "node:fs/promises";
+import { audioFileFromPath } from "../audio/file";
 import { formatError, truncate } from "../utils/text";
 
 export const audioBlobFromPath = async (audioPath: string): Promise<Blob> => {
   const audio = await readFile(audioPath);
-  return new Blob([new Uint8Array(audio)], { type: "audio/wav" });
+  return new Blob([new Uint8Array(audio)], { type: audioFileFromPath(audioPath).mimeType });
+};
+
+export const appendAudioFile = async (form: FormData, field: string, audioPath: string): Promise<void> => {
+  form.append(field, await audioBlobFromPath(audioPath), audioFileFromPath(audioPath).filename);
 };
 
 export const audioBytesFromPath = async (audioPath: string): Promise<Uint8Array> => {

@@ -21,6 +21,7 @@ const endpointWithQuery = (config: DeepgramProviderConfig, language?: string): s
 export const createDeepgramProvider = (config: DeepgramProviderConfig): SttProvider => ({
   id: "deepgram",
   async transcribe(input) {
+    const audio = await audioBlobFromPath(input.audioPath);
     const payload = await fetchJson(
       endpointWithQuery(config, input.language),
       {
@@ -28,9 +29,9 @@ export const createDeepgramProvider = (config: DeepgramProviderConfig): SttProvi
         headers: {
           Accept: "application/json",
           Authorization: `Token ${config.apiKey}`,
-          "Content-Type": "audio/wav",
+          "Content-Type": audio.type,
         },
-        body: await audioBlobFromPath(input.audioPath),
+        body: audio,
         signal: input.signal,
         redirect: "error",
       },

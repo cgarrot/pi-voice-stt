@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { appendAudioFile } from "./helpers";
 import { formatError, truncate } from "../utils/text";
 
 export type MultipartTranscriptionRequest = {
@@ -18,10 +18,9 @@ export const postMultipartTranscription = async (request: MultipartTranscription
     throw new Error(request.missingKeyMessage ?? "Missing STT API key.");
   }
 
-  const audio = await readFile(request.audioPath);
   const form = new FormData();
   form.append("model", request.model);
-  form.append("file", new Blob([new Uint8Array(audio)], { type: "audio/wav" }), "recording.wav");
+  await appendAudioFile(form, "file", request.audioPath);
   if (request.language) form.append("language", request.language);
   for (const [key, value] of Object.entries(request.fields ?? {})) form.append(key, value);
 

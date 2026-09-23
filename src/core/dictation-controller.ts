@@ -3,9 +3,9 @@ import type { AudioRecorder, RecordingHandle } from "../audio/types";
 import type { PluginConfig } from "../config/types";
 import { assertProviderReady } from "../providers/readiness";
 import type { Strings } from "../i18n/strings";
-import type { CleanupClient } from "../cleanup/types";
-import { applyReplacements } from "./replacements";
-import { parseVoiceCommand } from "./voice-commands";
+import { validateAudioFile } from "../audio/file";
+import { formatError } from "../utils/text";
+import { transcribeAudioPath, type TranscriptionServices } from "./transcribe";
 import { formatTranscriptForPrompt } from "./output";
 
 export type DictationMode = "idle" | "recording" | "processing" | "polishing";
@@ -17,13 +17,11 @@ export type DictationToast = {
   duration?: number;
 };
 
-export type DictationControllerOptions = {
+export type DictationControllerOptions = TranscriptionServices & {
   keybind: string;
   strings: Strings;
   loadConfig(): Promise<PluginConfig>;
   createRecorder(config: PluginConfig): AudioRecorder;
-  createProvider(config: PluginConfig): { transcribe(input: { audioPath: string; language?: string; signal: AbortSignal }): Promise<{ text: string }> };
-  createCleanup(config: PluginConfig): CleanupClient | null;
   appendPrompt(ctx: ExtensionContext, text: string): Promise<unknown>;
   submitPrompt(ctx: ExtensionContext): Promise<unknown>;
   notify(ctx: ExtensionContext | undefined, toast: DictationToast): void;
@@ -35,6 +33,11 @@ type StopRecordingOptions = {
   submitAfterAppend?: boolean;
 };
 
+type TranscribeFileOptions = {
+  signal?: AbortSignal | undefined;
+  insertIntoPrompt?: boolean;
+};
+
 const PROMPT_APPEND_FLUSH_DELAY_MS = 30;
 
 const waitForPromptAppendFlush = () => new Promise<void>((resolve) => setTimeout(resolve, PROMPT_APPEND_FLUSH_DELAY_MS));
@@ -43,7 +46,7 @@ export const createDictationController = (options: DictationControllerOptions) =
   let recording: RecordingHandle | undefined;
   let recordingConfig: PluginConfig | undefined;
   let activeRecordingHandle: RecordingHandle | undefined;
-  let activeOperation: Promise<void> | undefined;
+  let activeOperation: Promise<unknown> | undefined;
   let transcriptionController: AbortController | undefined;
   let processing = false;
   let cancelRequested = false;
@@ -76,49 +79,36 @@ export const createDictationController = (options: DictationControllerOptions) =
     await options.submitPrompt(ctx);
   };
 
+  const transcribe = (ctx: ExtensionContext, audioPath: string, config: PluginConfig, signal: AbortSignal, processVoiceCommands: boolean) =>
+    transcribeAudioPath({
+      audioPath,
+      config,
+      signal,
+      processVoiceCommands,
+      createProvider: options.createProvider,
+      createCleanup: options.createCleanup,
+      onPolishing: () => setMode("polishing", ctx),
+      onCleanupFailed: () => notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.cleanupFailed, variant: "warning" }),
+    });
+
   const stopActiveRecording = async (ctx: ExtensionContext, active: RecordingHandle, config: PluginConfig, stopOptions: StopRecordingOptions) => {
-    const provider = options.createProvider(config);
     const controller = new AbortController();
     transcriptionController = controller;
-    const timeout = setTimeout(() => controller.abort(), config.provider.timeoutSeconds * 1000);
 
     try {
       notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.stopping, variant: "info" });
       const audioPath = await active.stop();
       if (disposed) return;
-      const result = await provider.transcribe({ audioPath, language: config.provider.language, signal: controller.signal });
+      const result = await transcribe(ctx, audioPath, config, controller.signal, true);
       if (cancelRequested || disposed) return;
 
-      let text = applyReplacements(result.text, config.output.replacements);
-      const voice = parseVoiceCommand(text, config.commands);
-      if (voice.command === "clear") {
+      if (result.command === "clear") {
         notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.cleared, variant: "info" });
         return;
       }
-      text = voice.text;
-      const cleanup = options.createCleanup(config);
-      if (cleanup && text.trim()) {
-        setMode("polishing", ctx);
-        const cleanupController = new AbortController();
-        transcriptionController = cleanupController;
-        const cleanupTimeout = setTimeout(() => cleanupController.abort(), config.cleanup.timeoutSeconds * 1000);
-        try {
-          const cleaned = await cleanup.clean({ text, signal: cleanupController.signal });
-          if (!cancelRequested && !disposed && cleaned.trim()) text = cleaned;
-        } catch {
-          if (!cancelRequested && !disposed) {
-            notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.cleanupFailed, variant: "warning" });
-          }
-        } finally {
-          clearTimeout(cleanupTimeout);
-          if (transcriptionController === cleanupController) transcriptionController = undefined;
-        }
-        if (cancelRequested || disposed) return;
-      }
-
-      await appendPrompt(ctx, formatTranscriptForPrompt(text, config.output));
-      if (voice.command === "newline") await appendPrompt(ctx, "\n");
-      const shouldSubmit = stopOptions.submitAfterAppend || voice.command === "send";
+      await appendPrompt(ctx, formatTranscriptForPrompt(result.text, config.output));
+      if (result.command === "newline") await appendPrompt(ctx, "\n");
+      const shouldSubmit = stopOptions.submitAfterAppend || result.command === "send";
       if (shouldSubmit) {
         await waitForPromptAppendFlush();
         await submitPrompt(ctx);
@@ -131,9 +121,51 @@ export const createDictationController = (options: DictationControllerOptions) =
         });
       }
     } finally {
-      clearTimeout(timeout);
       if (transcriptionController === controller) transcriptionController = undefined;
       await active.dispose();
+    }
+  };
+
+  const transcribeFile = async (ctx: ExtensionContext, path: string, fileOptions: TranscribeFileOptions = {}) => {
+    rememberContext(ctx);
+    if (disposed) throw new Error("Pi Voice STT has been disposed.");
+    if (recording || processing) throw new Error("Pi Voice STT is busy. Stop or cancel the current recording/transcription first.");
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    fileOptions.signal?.addEventListener("abort", abort, { once: true });
+    if (fileOptions.signal?.aborted) abort();
+    transcriptionController = controller;
+    processing = true;
+    setMode("processing", ctx);
+
+    const operation = (async () => {
+      controller.signal.throwIfAborted();
+      const file = await validateAudioFile(path, ctx.cwd);
+      const config = await options.loadConfig();
+      controller.signal.throwIfAborted();
+      try {
+        assertProviderReady(config.provider);
+        const result = await transcribe(ctx, file.path, config, controller.signal, false);
+        controller.signal.throwIfAborted();
+        if (fileOptions.insertIntoPrompt) {
+          await appendPrompt(ctx, formatTranscriptForPrompt(result.text, config.output));
+          notify(ctx, { title: "Pi Voice STT", message: options.strings.toast.inserted, variant: "success" });
+        }
+        return { text: result.text, provider: config.provider.type, model: config.provider.model, path: file.path };
+      } catch (error) {
+        throw new Error(`Transcription failed (${config.provider.type}/${config.provider.model}) for "${file.path}" (${file.size} bytes): ${formatError(error)}`, { cause: error });
+      }
+    })();
+    activeOperation = operation;
+    try {
+      return await operation;
+    } finally {
+      fileOptions.signal?.removeEventListener("abort", abort);
+      if (transcriptionController === controller) transcriptionController = undefined;
+      if (activeOperation === operation) activeOperation = undefined;
+      processing = false;
+      cancelRequested = false;
+      setMode("idle", ctx);
     }
   };
 
@@ -271,6 +303,7 @@ export const createDictationController = (options: DictationControllerOptions) =
   };
 
   return {
+    transcribeFile,
     toggle,
     stop: (ctx: ExtensionContext) => stopRecording(ctx),
     stopAndSubmit: (ctx: ExtensionContext) => stopRecording(ctx, { submitAfterAppend: true }),

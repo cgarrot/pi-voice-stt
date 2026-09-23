@@ -1,5 +1,5 @@
 import type { GladiaProviderConfig } from "../config/types";
-import { audioBlobFromPath, fetchJson, normalizeLanguage, objectAt, sleep, textAt } from "./helpers";
+import { appendAudioFile, fetchJson, normalizeLanguage, objectAt, sleep, textAt } from "./helpers";
 import type { SttProvider } from "./types";
 
 const gladiaHeaders = (apiKey: string): Record<string, string> => ({
@@ -60,7 +60,7 @@ export const createGladiaProvider = (config: GladiaProviderConfig): SttProvider 
   id: "gladia",
   async transcribe(input) {
     const uploadForm = new FormData();
-    uploadForm.append("audio", await audioBlobFromPath(input.audioPath), "recording.wav");
+    await appendAudioFile(uploadForm, "audio", input.audioPath);
 
     const uploadPayload = await fetchJson(
       config.uploadEndpoint,

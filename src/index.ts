@@ -44,7 +44,7 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
 
   // Apply the persisted last-selection (sidecar state) once loaded; env and
   // the config `profile` key are already folded into startup.profile.
-  void (async () => {
+  const profileReady = (async () => {
     const fileConfig = await readConfigFile(startup.configPath).catch(() => ({}));
     const effective = await resolveEffectiveProfile({
       configPath: startup.configPath,
@@ -58,7 +58,10 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
     }
   })().catch(() => {});
 
-  const getConfig = () => loadConfig({ configPath: startup.configPath, mode: activeMode, profile: activeProfile });
+  const getConfig = async () => {
+    await profileReady;
+    return loadConfig({ configPath: startup.configPath, mode: activeMode, profile: activeProfile });
+  };
 
   const controller = createDictationController({
     keybind,
@@ -88,6 +91,7 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
   });
 
   const switchProfile = async (ctx: ExtensionContext, next: string): Promise<void> => {
+    await profileReady;
     if (controller.getMode() === "processing") {
       notify(ctx, { title: "Pi Voice STT", message: strings.profile.busy, variant: "warning" });
       return;
@@ -122,19 +126,51 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
     await switchProfile(ctx, next);
   };
 
+  pi.registerTool({
+    name: "transcribe_audio",
+    label: "Transcribe Audio",
+    description: "Transcribe a local audio file using the configured Pi Voice STT provider.",
+    promptSnippet: "Transcribe a local audio file with the active STT profile and mode.",
+    // Pi accepts JSON Schema directly; no additional runtime dependency is needed.
+    parameters: {
+      type: "object",
+      properties: { path: { type: "string", minLength: 1, description: "Local audio file path, relative to the session working directory or absolute." } },
+      required: ["path"],
+      additionalProperties: false,
+    } as const,
+    async execute(_toolCallId, { path }, signal, _onUpdate, ctx) {
+      const result = await controller.transcribeFile(ctx, path, { signal: signal ?? ctx.signal });
+      return { content: [{ type: "text", text: result.text }], details: result };
+    },
+  });
+
   pi.registerCommand("stt", {
-    description: "Voice dictation controls: start, stop, send, cancel, mode, profile, status, doctor.",
+    description: "Speech-to-text controls: start, stop, send, file <path>, cancel, mode, profile, status, doctor.",
     getArgumentCompletions: (prefix) => {
-      const commands = ["start", "stop", "send", "cancel", "mode", "profile", "status", "doctor"];
+      const commands = ["start", "stop", "send", "file", "cancel", "mode", "profile", "status", "doctor"];
       return commands
         .filter((command) => command.startsWith(prefix.trim().toLowerCase()))
         .map((command) => ({ value: command, label: command }));
     },
     handler: async (args, ctx) => {
       const trimmed = args.trim();
-      const [first, ...rest] = trimmed.split(/\s+/);
+      const first = trimmed.split(/\s+/, 1)[0] ?? "";
       const action = (first || "status").toLowerCase();
-      const param = rest.join(" ").trim();
+      const param = trimmed.slice(first.length).trim();
+
+      if (action === "file") {
+        try {
+          if (!param) throw new Error("Usage: /stt file <path>");
+          if ((param.startsWith('"') || param.startsWith("'")) && (param.length < 2 || !param.endsWith(param[0]!))) {
+            throw new Error("Unclosed quote in audio file path.");
+          }
+          const path = param.replace(/^(["'])(.*)\1$/s, "$2");
+          await controller.transcribeFile(ctx, path, { signal: ctx.signal, insertIntoPrompt: true });
+        } catch (error) {
+          reportError(ctx, error);
+        }
+        return;
+      }
 
       if (action === "start") {
         if (controller.getMode() === "idle") await controller.toggle(ctx).catch((error: unknown) => reportError(ctx, error));
@@ -212,7 +248,7 @@ export default function piVoiceSttExtension(pi: ExtensionAPI) {
       }
 
       if (action !== "status") {
-        ctx.ui.notify("Usage: /stt [start|stop|send|cancel|mode <name>|profile <name>|status|doctor]", "error");
+        ctx.ui.notify("Usage: /stt [start|stop|send|file <path>|cancel|mode <name>|profile <name>|status|doctor]", "error");
         return;
       }
 
