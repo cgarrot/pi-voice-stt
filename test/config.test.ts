@@ -134,6 +134,16 @@ test("loadConfig supports AssemblyAI", async () => {
   });
 });
 
+test("loadConfig supports Soniox", async () => {
+  await withConfig({ provider: { type: "soniox", apiKey: "test", language: "en" } }, async (configPath) => {
+    const config = await loadConfig({ configPath });
+    assert.equal(config.provider.type, "soniox");
+    assert.equal(config.provider.model, "stt-async-v5");
+    assert.equal(config.provider.language, "en");
+    assert.equal(config.provider.apiKey, "test");
+  });
+});
+
 test("loadConfig applies the selected profile before the mode override", async () => {
   await withConfig({
     provider: { type: "openai-compatible", endpoint: "http://127.0.0.1:8788/v1/audio/transcriptions", model: "base", apiKey: "k", language: "fr" },

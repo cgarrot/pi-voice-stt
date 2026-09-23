@@ -15,6 +15,8 @@ const providerDisplayName = (type: ProviderConfig["type"]): string => {
       return "Gladia";
     case "assemblyai":
       return "AssemblyAI";
+    case "soniox":
+      return "Soniox";
   }
 };
 

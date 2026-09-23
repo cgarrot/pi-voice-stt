@@ -5,6 +5,7 @@ import { createElevenLabsProvider } from "./elevenlabs";
 import { createGladiaProvider } from "./gladia";
 import { createMistralProvider } from "./mistral";
 import { createOpenAiCompatibleProvider } from "./openai-compatible";
+import { createSonioxProvider } from "./soniox";
 import type { SttProvider } from "./types";
 
 export const createProvider = (config: ProviderConfig): SttProvider => {
@@ -21,5 +22,7 @@ export const createProvider = (config: ProviderConfig): SttProvider => {
       return createGladiaProvider(config);
     case "assemblyai":
       return createAssemblyAiProvider(config);
+    case "soniox":
+      return createSonioxProvider(config);
   }
 };

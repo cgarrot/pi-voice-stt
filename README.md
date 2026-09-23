@@ -17,7 +17,7 @@ This project is intentionally small and hackable: a Pi extension, local/bridge a
 - Optional native Mac microphone bridge for local Pi sessions or Pi sessions running on a VPS over SSH.
 - Mistral Voxtral provider.
 - OpenAI / Groq / generic OpenAI-compatible provider for hosted and local Whisper-style endpoints.
-- Native provider integrations for Deepgram, ElevenLabs Scribe, Gladia, and AssemblyAI.
+- Native provider integrations for Deepgram, ElevenLabs Scribe, Gladia, AssemblyAI, and Soniox.
 - Environment variable and macOS Keychain secret lookup.
 - HTTPS-by-default endpoint policy; plain HTTP is allowed only for loopback hosts.
 - TypeScript source loaded directly by Pi; no build step required for runtime.
@@ -28,7 +28,7 @@ This project is intentionally small and hackable: a Pi extension, local/bridge a
 - Node.js `>= 20` when developing locally.
 - `ffmpeg` available in `PATH` or configured with `capture.ffmpegPath`.
 - Microphone permission for the terminal app running Pi, or for the Mac bridge daemon when using `capture.type: "bridge"`.
-- A transcription backend (Mistral, OpenAI/Groq, Deepgram, ElevenLabs, Gladia, AssemblyAI, or a local OpenAI-compatible server).
+- A transcription backend (Mistral, OpenAI/Groq, Deepgram, ElevenLabs, Gladia, AssemblyAI, Soniox, or a local OpenAI-compatible server).
 
 ## Installation
 
@@ -364,6 +364,23 @@ You can also use `model: "whisper-1"` or any OpenAI transcription model supporte
 }
 ```
 
+### Soniox
+
+```json
+{
+  "provider": {
+    "type": "soniox",
+    "model": "stt-async-v5",
+    "apiKeyEnv": "SONIOX_API_KEY",
+    "language": "en"
+  }
+}
+```
+
+Get an API key at [console.soniox.com](https://console.soniox.com). Supports `baseUrl` (default `https://api.soniox.com`), `model` (default `stt-async-v5`), `language` (maps to `language_hints`; empty or `"auto"` for auto-detection), `timeoutSeconds` (default `300`), and `pollIntervalMs` (default `1000`).
+
+A ready-to-copy config is provided in [`examples/soniox.json`](examples/soniox.json).
+
 ### Local STT server
 
 ```json
@@ -514,6 +531,7 @@ export GROQ_API_KEY=...
 export DEEPGRAM_API_KEY=...
 export ELEVENLABS_API_KEY=...
 export GLADIA_API_KEY=...
+export SONIOX_API_KEY=...
 export ASSEMBLYAI_API_KEY=...
 ```
 

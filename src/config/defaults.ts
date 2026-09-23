@@ -10,6 +10,7 @@ import type {
   MistralProviderConfig,
   OpenAiCompatibleProviderConfig,
   OutputConfig,
+  SonioxProviderConfig,
   VoiceCommandsConfig,
 } from "./types";
 
@@ -125,6 +126,20 @@ export const defaultAssemblyAiProviderConfig = {
   keychainService: "",
   keychainAccount: "",
 } satisfies AssemblyAiProviderConfig;
+
+export const defaultSonioxProviderConfig = {
+  type: "soniox",
+  baseUrl: "https://api.soniox.com",
+  model: "stt-async-v5",
+  language: "",
+  timeoutSeconds: 300,
+  pollIntervalMs: 1000,
+  apiKey: "",
+  apiKeyEnv: "SONIOX_API_KEY",
+  apiKeyFile: "",
+  keychainService: "",
+  keychainAccount: "",
+} satisfies SonioxProviderConfig;
 
 export const defaultOutputConfig = {
   appendTrailingSpace: true,

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add Soniox async STT provider (`SONIOX_API_KEY`, model `stt-async-v5`, via the
+  Files + Transcriptions API with bounded polling and best-effort cleanup). (#20,
+  @TomGrozev)
+
 ## [0.7.0] - 2026-09-07
 
 ### Added

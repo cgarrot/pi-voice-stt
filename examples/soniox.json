@@ -1,0 +1,10 @@
+{
+  "keybind": "ctrl+r",
+  "provider": {
+    "type": "soniox",
+    "model": "stt-async-v5",
+    "apiKeyEnv": "SONIOX_API_KEY",
+    "language": "en",
+    "pollIntervalMs": 1000
+  }
+}
