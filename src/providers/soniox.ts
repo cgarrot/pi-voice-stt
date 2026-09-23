@@ -1,5 +1,5 @@
 import type { SonioxProviderConfig } from "../config/types";
-import { arrayAt, audioBlobFromPath, fetchJson, normalizeLanguage, sleep, textAt } from "./helpers";
+import { appendAudioFile, arrayAt, fetchJson, normalizeLanguage, sleep, textAt } from "./helpers";
 import type { SttProvider } from "./types";
 
 const sonioxHeaders = (apiKey: string): Record<string, string> => ({
@@ -43,7 +43,7 @@ export const createSonioxProvider = (config: SonioxProviderConfig): SttProvider 
   async transcribe(input) {
     const base = trimSlash(config.baseUrl);
     const uploadForm = new FormData();
-    uploadForm.append("file", await audioBlobFromPath(input.audioPath), "recording.wav");
+    await appendAudioFile(uploadForm, "file", input.audioPath);
     const uploadPayload = await fetchJson(`${base}/v1/files`, { method: "POST", headers: sonioxHeaders(config.apiKey), body: uploadForm, signal: input.signal, redirect: "error" }, "Soniox audio upload");
     const fileId = textAt(uploadPayload, "id");
     if (!fileId) throw new Error("Soniox upload response did not include id.");

@@ -625,6 +625,16 @@ tools/                       optional Mac bridge daemon/installer
 - Use only Node built-ins at runtime.
 - Fail safely: clean up temporary files and stop local or bridged `ffmpeg` on cancel, reload, or exit.
 
+## Contributors
+
+Thanks to everyone who has contributed to Pi Voice STT:
+
+<a href="https://github.com/cgarrot/pi-voice-stt/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cgarrot/pi-voice-stt" alt="Pi Voice STT contributors" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks). Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 MIT
