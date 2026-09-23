@@ -1,6 +1,6 @@
 {
   "name": "pi-voice-stt",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Provider-agnostic speech-to-text for Pi, with interactive voice dictation and audio file transcription.",
   "license": "MIT",
   "type": "module",

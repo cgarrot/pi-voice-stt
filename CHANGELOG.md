@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-23
+
 ### Added
 
 - Add Soniox async STT provider (`SONIOX_API_KEY`, model `stt-async-v5`, via the
@@ -134,7 +136,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `capture.input`, device listing (`pactl`/`arecord -L`), and the ALSA fallback.
   The README gains a dedicated capture-troubleshooting subsection. (#4)
 
-[Unreleased]: https://github.com/cgarrot/pi-voice-stt/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/cgarrot/pi-voice-stt/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/cgarrot/pi-voice-stt/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/cgarrot/pi-voice-stt/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/cgarrot/pi-voice-stt/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/cgarrot/pi-voice-stt/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/cgarrot/pi-voice-stt/compare/v0.4.1...v0.5.0
