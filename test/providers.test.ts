@@ -33,7 +33,15 @@ for (const config of configs) {
         if (config.type === "gladia") {
           return Response.json(init.method === "POST" ? { id: "test" } : { status: "done", result: { transcription: { full_transcript: "Meeting" } } });
         }
-        if (config.type === "assemblyai") return Response.json(init.method === "POST" ? { id: "test" } : { status: "completed", text: "Meeting" });
+        if (config.type === "assemblyai") {
+          if (init.method === "POST") {
+            const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+            assert.deepEqual(body.speech_models, [config.model]);
+            assert.equal(body.speech_model, undefined);
+            return Response.json({ id: "test" });
+          }
+          return Response.json({ status: "completed", text: "Meeting" });
+        }
         if (config.type === "deepgram") return Response.json({ results: { channels: [{ alternatives: [{ transcript: "Meeting" }] }] } });
         return Response.json({ text: "Meeting" });
       });

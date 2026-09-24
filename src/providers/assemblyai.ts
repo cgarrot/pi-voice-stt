@@ -60,7 +60,7 @@ export const createAssemblyAiProvider = (config: AssemblyAiProviderConfig): SttP
     const language = normalizeLanguage(input.language ?? config.language);
     const body: Record<string, unknown> = {
       audio_url: audioUrl,
-      speech_model: config.model,
+      speech_models: [config.model],
     };
     if (language) body.language_code = language;
 
