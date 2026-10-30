@@ -226,7 +226,7 @@ Batch dictation records a file, uploads it and waits for the transcript. Realtim
   "realtime": {
     "enabled": true,
     "keybind": "ctrl+shift+r",
-    "model": "universal-3-5-pro",
+    "model": "universal-3-6-pro",
     "mode": "balanced",
     "formatTurns": true,
     "language": "auto",
@@ -245,7 +245,7 @@ Batch dictation records a file, uploads it and waits for the transcript. Realtim
 
 - `enabled` — realtime is off until you turn it on. The provider is fixed to AssemblyAI: streaming protocols, auth and message shapes are vendor-specific, and only AssemblyAI is implemented.
 - `keybind` — defaults to `ctrl+shift+r` and toggles a session: press to start, press again to finish and insert. `PI_STT_REALTIME_KEYBIND` overrides it.
-- `model` / `mode` — sent to the streaming endpoint. `mode` accepts `balanced` or `min_latency`.
+- `model` / `mode` — sent to the streaming endpoint. `mode` accepts `balanced` or `min_latency`. The default model is `universal-3-6-pro`, AssemblyAI's recommended streaming model; `universal-3-5-pro` and the cost-effective `universal-streaming-english`/`universal-streaming-multilingual` remain valid choices. Note that Universal-3.6 Pro is streaming-only — batch (`provider`) transcription keeps its own model list.
 - `formatTurns` — ask the server to punctuate and capitalize finalized turns.
 - `language` — `auto` omits the language parameter and lets the model decide; any other value is sent as `language_codes` (comma-separate several).
 - `keyterms` — words the model should prefer, sent as a JSON array. Useful for project names and jargon.

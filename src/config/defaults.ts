@@ -137,7 +137,7 @@ export const defaultRealtimeConfig = {
   enabled: false,
   keybind: "ctrl+shift+r",
   endpoint: "wss://streaming.assemblyai.com/v3/ws",
-  model: "universal-3-5-pro",
+  model: "universal-3-6-pro",
   mode: "balanced",
   formatTurns: true,
   language: "auto",

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The realtime streaming default model is now `universal-3-6-pro`, AssemblyAI's
+  recommended streaming model and server-side default (32 languages, drop-in
+  replacement with the same parameters, features and latency as
+  `universal-3-5-pro`, which remains available by setting `realtime.model`).
+  Batch AssemblyAI transcription is unchanged: Universal-3.6 Pro is
+  streaming-only for now. (#25, @cairodavila)
+
 ## [0.10.0] - 2026-10-23
 
 ### Added
