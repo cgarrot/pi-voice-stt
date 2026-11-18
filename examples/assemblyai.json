@@ -2,7 +2,7 @@
   "keybind": "ctrl+r",
   "provider": {
     "type": "assemblyai",
-    "model": "universal",
+    "model": "assemblyai-stt-3-7",
     "apiKeyEnv": "ASSEMBLYAI_API_KEY",
     "language": "en",
     "pollIntervalMs": 1000

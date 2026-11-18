@@ -127,9 +127,9 @@ export const createRealtimeController = (
       words.slice(count).join(" "),
       outputConfig().replacements,
     );
-    // Label a turn when the speaker changes; UNKNOWN/missing sticks to the last one.
+    // Label a turn when the speaker changes; UNKNOWN/PENDING (turns under ~1s)/missing stick to the last one.
     const speaker = turnSpeakers.get(turnOrder) ?? "";
-    if (count === 0 && speaker && speaker !== "UNKNOWN" && speaker !== lastSpeaker) {
+    if (count === 0 && speaker && speaker !== "UNKNOWN" && speaker !== "PENDING" && speaker !== lastSpeaker) {
       text = `${lastSpeaker ? "\n" : ""}Speaker ${speaker}: ${text}`;
       lastSpeaker = speaker;
     }
