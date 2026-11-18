@@ -29,7 +29,7 @@ writeFileSync(
     {
       provider: {
         type: "assemblyai",
-        model: "universal-3-5-pro",
+        model: "assemblyai-stt-3-7",
         language: "auto",
         apiKeyEnv: "ASSEMBLYAI_API_KEY",
       },

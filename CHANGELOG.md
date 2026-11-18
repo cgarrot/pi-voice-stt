@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- AssemblyAI batch transcription sends a comma-separated `language` (for example
+  `"en,pt"`) as `language_codes`, which AssemblyAI-STT-3.7 uses to restrict
+  detection to those languages while code-switching between them.
+
+### Changed
+
+- AssemblyAI-STT-3.7 is the default: batch `provider.model` is now
+  `assemblyai-stt-3-7` (sent as `["assemblyai-stt-3-7", "universal-2"]`, so
+  languages outside its 32 still fall back) and `realtime.model` is now
+  `assemblyai-stt-3-7-realtime`. Set `model` explicitly to keep the previous
+  models.
+- AssemblyAI batch requests send `disfluencies: false`. AssemblyAI-STT-3.7
+  keeps fillers, stutters and false starts by default; dictation keeps the
+  clean output it had on Universal-3.5 Pro and Universal-2.
+
+### Fixed
+
+- Realtime speaker labels skip the `PENDING` label AssemblyAI assigns to turns
+  shorter than about a second, instead of printing `Speaker PENDING:`.
+
 ## [0.11.0] - 2026-10-30
 
 ### Changed

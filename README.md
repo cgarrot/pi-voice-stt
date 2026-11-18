@@ -226,7 +226,7 @@ Batch dictation records a file, uploads it and waits for the transcript. Realtim
   "realtime": {
     "enabled": true,
     "keybind": "ctrl+shift+r",
-    "model": "universal-3-6-pro",
+    "model": "assemblyai-stt-3-7-realtime",
     "mode": "balanced",
     "formatTurns": true,
     "language": "auto",
@@ -245,7 +245,7 @@ Batch dictation records a file, uploads it and waits for the transcript. Realtim
 
 - `enabled` — realtime is off until you turn it on. The provider is fixed to AssemblyAI: streaming protocols, auth and message shapes are vendor-specific, and only AssemblyAI is implemented.
 - `keybind` — defaults to `ctrl+shift+r` and toggles a session: press to start, press again to finish and insert. `PI_STT_REALTIME_KEYBIND` overrides it.
-- `model` / `mode` — sent to the streaming endpoint. `mode` accepts `balanced` or `min_latency`. The default model is `universal-3-6-pro`, AssemblyAI's recommended streaming model; `universal-3-5-pro` and the cost-effective `universal-streaming-english`/`universal-streaming-multilingual` remain valid choices. Note that Universal-3.6 Pro is streaming-only — batch (`provider`) transcription keeps its own model list.
+- `model` / `mode` — sent to the streaming endpoint. `mode` accepts `balanced` or `min_latency` (`max_accuracy` too on the agent model). The default model is `assemblyai-stt-3-7-realtime` (AssemblyAI-STT-3.7-Realtime, 32 languages in one stream, speaker labels final as each turn ends). `assemblyai-stt-3-7-realtime-agent` finalizes turns faster with fewer partial rewrites, at a higher price; `universal-3-6-pro` remains supported. Streaming model names are not valid for batch (`provider`) transcription, which has its own model list.
 - `formatTurns` — ask the server to punctuate and capitalize finalized turns.
 - `language` — `auto` omits the language parameter and lets the model decide; any other value is sent as `language_codes` (comma-separate several).
 - `keyterms` — words the model should prefer, sent as a JSON array. Useful for project names and jargon.
@@ -435,7 +435,7 @@ You can also use `model: "whisper-1"` or any OpenAI transcription model supporte
 {
   "provider": {
     "type": "assemblyai",
-    "model": "universal-3-5-pro",
+    "model": "assemblyai-stt-3-7",
     "apiKeyEnv": "ASSEMBLYAI_API_KEY",
     "language": "auto",
     "pollIntervalMs": 1000
@@ -443,9 +443,9 @@ You can also use `model: "whisper-1"` or any OpenAI transcription model supporte
 }
 ```
 
-`model` accepts any current AssemblyAI model name (`universal-3-5-pro`, `universal-2`, …) or a comma-separated preference list. The extension sends the plural `speech_models` array and appends `universal-2` as the fallback tier when you name a single model, which is AssemblyAI's recommended routing. The legacy `universal` alias is mapped to `universal-2`. The singular `speech_model` parameter is deprecated and rejects current model names with HTTP 400.
+`model` defaults to `assemblyai-stt-3-7` and accepts any current AssemblyAI model name (`assemblyai-stt-3-7`, `universal-2`, …) or a comma-separated preference list. The extension sends the plural `speech_models` array and appends `universal-2` as the fallback tier when you name a single model, which is AssemblyAI's recommended routing (AssemblyAI-STT-3.7 covers 32 languages and does not fall back to Universal-2 on its own). Requests send `disfluencies: false`, so dictation stays free of fillers and false starts even though AssemblyAI-STT-3.7 keeps them by default. The legacy `universal` alias is mapped to `universal-2`. The singular `speech_model` parameter is deprecated and rejects current model names with HTTP 400.
 
-With `language: "auto"` the provider sends `language_detection` rather than a fixed `language_code`, so the preference list routes per request. Note that detection works best with at least ~15 seconds of audio.
+With `language: "auto"` the provider sends `language_detection` rather than a fixed `language_code`, so the preference list routes per request. A comma-separated value such as `"en,pt"` is sent as `language_codes`, which restricts AssemblyAI-STT-3.7 to those languages while still allowing code-switching between them. Note that detection works best with at least ~15 seconds of audio.
 
 ### Soniox
 

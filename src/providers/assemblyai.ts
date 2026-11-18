@@ -11,7 +11,8 @@ import type { SttProvider } from "./types";
  * (`speech_model is deprecated. Use "speech_models" instead`). Sending the
  * array form is the only way to select a modern model. A single configured
  * model gets universal-2 appended as the fallback tier, which is AssemblyAI's
- * recommended routing; a comma-separated list is passed through as-is.
+ * recommended routing (assemblyai-stt-3-7 never falls back on its own when
+ * language_detection is on); a comma-separated list is passed through as-is.
  */
 export const buildSpeechModels = (model: string): string[] => {
   const requested = model
@@ -104,8 +105,12 @@ export const createAssemblyAiProvider = (config: AssemblyAiProviderConfig): SttP
     const body: Record<string, unknown> = {
       audio_url: audioUrl,
       speech_models: buildSpeechModels(config.model),
+      // assemblyai-stt-3-7 keeps fillers and false starts by default; dictation wants clean text.
+      disfluencies: false,
     };
-    if (language) body.language_code = language;
+    const languages = (language ?? "").split(",").map((entry) => entry.trim()).filter(Boolean);
+    if (languages.length > 1) body.language_codes = languages;
+    else if (languages.length === 1) body.language_code = languages[0];
     else if (requestedLanguage.toLowerCase() === "auto") body.language_detection = true;
     if (config.speakers > 0) {
       body.speaker_labels = true;
